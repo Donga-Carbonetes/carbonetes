@@ -3,21 +3,34 @@ import requests
 import subprocess
 import time
 
+SERVER_URL = "http://localhost:5000"
+
 def run_job(job):
     try:
-        cmd = ["python", job["script"]] + job["args"]
+        if job["type"] == "python_script":
+            cmd = ["python", job["script"]] + job["args"]
+        elif job["type"] == "kubectl_cmd":
+            cmd = [job["script"]] + job["args"]  # 예: ["kubectl", "get", "nodes"]
+        else:
+            print(f"⚠️ 알 수 없는 작업 타입: {job['type']}")
+            requests.post(f"{SERVER_URL}/jobs/{job['id']}/status", json={"status": "FAILED"})
+            return
+
+        print(f"▶️ 실행 명령어: {' '.join(cmd)}")
         subprocess.run(cmd, check=True)
-        requests.post(f"http://localhost:5000/jobs/{job['id']}/status", json={"status": "DONE"})
+
+        requests.post(f"{SERVER_URL}/jobs/{job['id']}/status", json={"status": "DONE"})
         print(f"✅ 작업 완료: {job['id']}")
-    except subprocess.CalledProcessError:
-        requests.post(f"http://localhost:5000/jobs/{job['id']}/status", json={"status": "FAILED"})
-        print(f"❌ 작업 실패: {job['id']}")
+
+    except subprocess.CalledProcessError as e:
+        print(f"❌ 작업 실패: {job['id']}\n에러: {e}")
+        requests.post(f"{SERVER_URL}/jobs/{job['id']}/status", json={"status": "FAILED"})
 
 while True:
-    res = requests.get("http://localhost:5000/jobs/next")
+    res = requests.get(f"{SERVER_URL}/jobs/next")
     if res.status_code == 200:
         job = res.json()
-        print(f"🚀 실행 중: {job['id']}")
+        print(f"\n🚀 작업 수신됨: {job['id']} ({job['type']})")
         run_job(job)
     else:
         time.sleep(1)
