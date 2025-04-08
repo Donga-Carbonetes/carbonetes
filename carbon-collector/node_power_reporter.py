@@ -1,7 +1,7 @@
 #CPU 사용률과 TDP를 받아서 소비 전력을 계산
 from dotenv import load_dotenv
 import os
-
+import time
 # 필요한 라이브러리 임포트
 import psutil  # CPU 사용률 측정용
 import requests  # HTTP 요청 전송용
@@ -40,9 +40,11 @@ def report_power():
         "power": power_usage  # 전력 값 포함
     }
     # 서버로 POST 요청 보내기
-    response = requests.post("http://{ip_address}:8080/report_power", json=data)
+    response = requests.post(f"http://{ip_address}:8080/report_power", json=data)
     # 서버 응답 출력
     print("서버 응답:", response.json())
 
 if __name__ == "__main__":
-    report_power()  # 메인 실행 시 전송 함수 호출
+    while True:
+        report_power()  # 메인 실행 시 전송 함수 호출
+        time.sleep(5)  # 5초 간격으로 반복
