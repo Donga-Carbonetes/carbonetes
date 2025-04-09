@@ -1,0 +1,3 @@
+timestamp,cluster,power_usage_W,carbon_emission_g
+2025-04-09 09:27:07.164623,cluster-1,17.88,7.58
+2025-04-09 09:27:14.229625,cluster-1,15.6,6.61

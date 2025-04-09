@@ -1,8 +1,16 @@
 # 탄소 수집기 서버
 #클라이언트가 보낸 전력 소비량 데이터를 받아서, 탄소 배출량을 계산해 응답
 from flask import Flask, request, jsonify
+from datetime import datetime
+import csv
 
 app = Flask(__name__)
+
+# CSV 파일이 저장되는 경로 
+CSV_FILE = 'power_log.csv'
+with open(CSV_FILE, mode='a', newline='') as file:
+    writer = csv.writer(file)
+    writer.writerow(['timestamp', 'cluster', 'power_usage_W', 'carbon_emission_g'])
 
 @app.route('/report_power', methods=['POST'])
 def report_power():
@@ -19,6 +27,10 @@ def report_power():
 
     # 탄소 배출량 계산 (전력 소비량을 kWh 단위로 변환)
     carbon_emission = power_usage * (1 / 1000) * carbon_intensity
+    # CSV 저장
+    with open(CSV_FILE, mode='a', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow([datetime.now(), cluster_name, power_usage, round(carbon_emission * 1000, 2)])
 
     return jsonify({
         "cluster": cluster_name,
