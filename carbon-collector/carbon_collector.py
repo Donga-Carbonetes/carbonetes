@@ -1,13 +1,23 @@
 # 탄소 수집기 서버
 #클라이언트가 보낸 전력 소비량 데이터를 받아서, 탄소 배출량을 계산해 응답
-from flask import Flask, request, jsonify
-from datetime import datetime
-import csv
 
-app = Flask(__name__)
+from flask import Flask, request, jsonify # Flask 서버 구축
+import csv # 전력 사용량 CSV로 저장
+from prometheus_flask_exporter import PrometheusMetrics # Flask에 Prometheus Exporter
+from prometheus_client import Gauge # Prometheus 지표(Gauge 타입)
+from datetime import datetime # 날짜/시간 기록용
 
-# CSV 파일이 저장되는 경로 
+app = Flask(__name__) #Flask 앱 시작
+
+
+# Prometheus exporter 초기화
+metrics = PrometheusMetrics(app)
+# Custom Prometheus 메트릭
+power_usage_metric = Gauge('power_usage_w', 'Current Power Usage in Watts', ['cluster']) #전력 사용량 (W)
+carbon_emission_metric = Gauge('carbon_emission_g', 'Current Carbon Emission in grams', ['cluster']) #탄소 배출량 (g)
 CSV_FILE = 'power_log.csv'
+
+# 최초 실행 시 헤더 쓰기
 with open(CSV_FILE, mode='a', newline='') as file:
     writer = csv.writer(file)
     writer.writerow(['timestamp', 'cluster', 'power_usage_W', 'carbon_emission_g'])
@@ -31,6 +41,10 @@ def report_power():
     with open(CSV_FILE, mode='a', newline='') as file:
         writer = csv.writer(file)
         writer.writerow([datetime.now(), cluster_name, power_usage, round(carbon_emission * 1000, 2)])
+    
+    # Prometheus 메트릭 업데이트
+    power_usage_metric.labels(cluster=cluster_name).set(power_usage)
+    carbon_emission_metric.labels(cluster=cluster_name).set(round(carbon_emission * 1000, 2))
 
     return jsonify({
         "cluster": cluster_name,
