@@ -8,7 +8,11 @@ import requests  # HTTP 요청 전송용
 import platform  # CPU 모델 정보 확인용
 
 load_dotenv()  # .env 파일 로드
-ip_address = os.getenv("IP_ADDRESS")  # .env에 저장된 IP 불러오기
+
+#ip_address = os.getenv("IP_ADDRESS")  # .env에 저장된 IP 불러오기
+ip_address = "127.0.0.1" # 하드코딩
+
+
 # CPU 모델별 TDP 매핑(수동으로 추가한거라.. 정확하진 않을수 있고 적음.)
 TDP_MAP = {
     "Intel(R) Core(TM) i5": 65,
@@ -39,10 +43,21 @@ def report_power():
         "cluster": "cluster-1",  # 클러스터 이름 지정 (예시)
         "power": power_usage  # 전력 값 포함
     }
-    # 서버로 POST 요청 보내기
-    response = requests.post(f"http://{ip_address}:18080/report_power", json=data) # 8080 -> 18080 포트 변경합니다. NAS 중복 issue 정주영
-    # 서버 응답 출력
-    print("서버 응답:", response.json())
+
+    try:
+        # 서버로 POST 요청 보내기
+        response = requests.post(f"http://{ip_address}:18080/report_power", json=data, timeout=5)
+        response.raise_for_status()  # 상태 코드가 4xx, 5xx일 경우 예외 발생
+        print("서버 응답:", response.json())
+    except requests.exceptions.ConnectionError as e:
+        print("연결 오류:", e)
+    except requests.exceptions.Timeout as e:
+        print("요청 시간 초과:", e)
+    except requests.exceptions.HTTPError as e:
+        print(f"HTTP 오류 발생: {e} (상태 코드: {response.status_code})")
+    except requests.exceptions.RequestException as e:
+        print("기타 요청 예외:", e)
+
 
 if __name__ == "__main__":
     while True:

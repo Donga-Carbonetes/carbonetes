@@ -10,7 +10,7 @@ from datetime import datetime # 날짜/시간 기록용
 app = Flask(__name__) #Flask 앱 시작
 
 
-# Prometheus exporter 초기화
+# Prometheus exporter 초기화F8080
 metrics = PrometheusMetrics(app)
 # Custom Prometheus 메트릭
 power_usage_metric = Gauge('power_usage_w', 'Current Power Usage in Watts', ['cluster']) #전력 사용량 (W)
@@ -54,4 +54,4 @@ def report_power():
     })
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080)
+    app.run(host="0.0.0.0", port=18080)
