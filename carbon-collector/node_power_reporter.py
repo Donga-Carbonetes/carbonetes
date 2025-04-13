@@ -40,7 +40,7 @@ def report_power():
         "power": power_usage  # 전력 값 포함
     }
     # 서버로 POST 요청 보내기
-    response = requests.post(f"http://{ip_address}:8080/report_power", json=data)
+    response = requests.post(f"http://{ip_address}:18080/report_power", json=data) # 8080 -> 18080 포트 변경합니다. NAS 중복 issue 정주영
     # 서버 응답 출력
     print("서버 응답:", response.json())
 
