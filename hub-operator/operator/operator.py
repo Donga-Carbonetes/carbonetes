@@ -85,8 +85,8 @@ def generate_job_manifest(name):
                             ],
                             "command": ["python", "exporter.py"],
                             "env": [ 
-                                {"name": "MYSQL_HOST", "value": os.getenv("MYSQL_HOST")},
-                                {"name": "MYSQL_PORT", "value": os.getenv("MYSQL_PORT")},
+                                {"name": "MYSQL_HOST", "value": 'mysql'},
+                                {"name": "MYSQL_PORT", "value": '3306'},
                                 {"name": "MYSQL_USER", "value": "root"},
                                 {"name": "MYSQL_PASSWORD", "value": os.getenv("MYSQL_PASSWORD")},
                                 {"name": "MYSQL_DATABASE", "value": "carbonetes"},
