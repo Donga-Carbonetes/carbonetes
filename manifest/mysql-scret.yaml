@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysql-secret
+type: Opaque
+data:
+  mysql-root-password: MTIzNDEyMzQ= # base64 인코딩된 "12341234"
+  mysql-user: c2E=                # base64 인코딩된 "sa"
+  mysql-password: MTIzNDEyMzQ=   # base64 인코딩된 "12341234"
