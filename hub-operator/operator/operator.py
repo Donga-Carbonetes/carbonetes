@@ -1,7 +1,7 @@
 import kopf
 import os
 from kubernetes import client, config
-from datetime import datetime
+from datetime import datetime, timezone
 
 config.load_kube_config()
 
@@ -27,7 +27,7 @@ def handle_mltask(body, spec, meta, namespace, logger, **kwargs):
     batch.create_namespaced_job(namespace=namespace, body=job_manifest)
 
     logger.info(f"[MLTask] Job {name}-job 생성 완료")
-    return {"phase": "running", "dispatchedTime": datetime.utcnow().isoformat()}
+    return {"phase": "waiting", "startTime": datetime.now(timezone.utc).isoformat()}
 
 @kopf.on.delete('ml.carbonetes.io', 'v1', 'mltasks')
 def delete_mltask(body, spec, meta, namespace, logger, **kwargs):
