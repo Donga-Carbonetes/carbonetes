@@ -35,8 +35,8 @@ def extract_training_profile(model, optimizer, loss_fn, batch_size, epochs, devi
     }
 
     dataset_info = {
-        "train_size": 50000,
-        "input_shape": [3, 32, 32],
+        "dataset_size": 50000,
+        "data_shape": [3, 32, 32],
         "label_count": 10
     }
 
@@ -52,7 +52,7 @@ def profiling(profile, model, optimizer, loss_function):
     model = model.to(profile['hyperparameters']['device'])
     model.train()
 
-    shape = profile['dataset']['input_shape']
+    shape = profile['dataset']['data_shape']
     batch = profile['hyperparameters']['batch_size']
     labels = profile['dataset']['label_count']
 
@@ -77,13 +77,13 @@ def profiling(profile, model, optimizer, loss_function):
         optimizer.step()
         end_time = time.time()
 
-    steps = profile['dataset']['train_size'] // batch
+    steps = profile['dataset']['dataset_size'] // batch
     return (end_time - start_time) * steps
 
 
 if __name__ == "__main__":
     load_dotenv()
-    user_module = load_user_module("/mnt/main.py")
+    user_module = load_user_module("E:\carbonetes\exporter\sample_resnet.py")
 
     # 추출
     profile = extract_training_profile(
@@ -124,8 +124,8 @@ if __name__ == "__main__":
     """
 
     task_name = make_task_name_with_UUID(profile['model']['model_name'])
-    data_shape = str(profile['dataset']['input_shape'])
-    dataset_size = profile['dataset']['train_size']
+    data_shape = str(profile['dataset']['data_shape'])
+    dataset_size = profile['dataset']['dataset_size']
     label_count = profile['dataset']['label_count']
     estimated_time = standard_time * profile['hyperparameters']['epochs']
 
