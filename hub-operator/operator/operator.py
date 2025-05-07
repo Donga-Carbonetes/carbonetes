@@ -69,6 +69,8 @@ def generate_job_manifest(name):
             "name": f"{name}-job"
         },
         "spec": {
+            "backoffLimit": 3,  
+            "ttlSecondsAfterFinished": 600,  # 5분뒤 정리 job 삭제
             "template": {
                 "spec": {
                     "containers": [
@@ -101,4 +103,3 @@ def generate_job_manifest(name):
             }
         }
     }
-
