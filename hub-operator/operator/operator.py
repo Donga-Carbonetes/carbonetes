@@ -3,7 +3,7 @@ import os
 from kubernetes import client, config
 from datetime import datetime
 
-config.load_incluster_config()
+config.load_kube_config()
 
 @kopf.on.create('ml.carbonetes.io', 'v1', 'mltasks')
 def handle_mltask(body, spec, meta, namespace, logger, **kwargs):
@@ -15,7 +15,6 @@ def handle_mltask(body, spec, meta, namespace, logger, **kwargs):
 
     logger.info(f"[MLTask] {name} 생성 감지 - 코드 저장 및 Job 생성 시작")
 
-    # ✅ 1. script를 ConfigMap으로 저장
     cm = client.V1ConfigMap(
         metadata=client.V1ObjectMeta(name=f"{name}-script"),
         data={"main.py": script}
@@ -23,7 +22,6 @@ def handle_mltask(body, spec, meta, namespace, logger, **kwargs):
     core = client.CoreV1Api()
     core.create_namespaced_config_map(namespace, cm)
 
-    # ✅ 2. Job 생성
     batch = client.BatchV1Api()
     job_manifest = generate_job_manifest(name)
     batch.create_namespaced_job(namespace=namespace, body=job_manifest)
@@ -45,16 +43,16 @@ def generate_job_manifest(name):
                     "containers": [
                         {
                             "name": "exporter",
-                            "image": "twkji/exporter:latest",  # ✅ 실제 이미지
+                            "image": "twkji/exporter:latest",
                             "volumeMounts": [
                                 {"name": "script-volume", "mountPath": "/mnt"}
                             ],
                             "command": ["python", "exporter.py"],
-                            "env": [  # ✅ MySQL 환경변수 주입
-                                {"name": "MYSQL_HOST", "value": "your-mysql-host"},
-                                {"name": "MYSQL_PORT", "value": "3306"},
+                            "env": [ 
+                                {"name": "MYSQL_HOST", "value": os.getenv("MYSQL_HOST")},
+                                {"name": "MYSQL_PORT", "value": os.getenv("MYSQL_PORT")},
                                 {"name": "MYSQL_USER", "value": "root"},
-                                {"name": "MYSQL_PASSWORD", "value": "your-password"},
+                                {"name": "MYSQL_PASSWORD", "value": os.getenv("MYSQL_PASSWORD")},
                                 {"name": "MYSQL_DATABASE", "value": "carbonetes"},
                             ]
                         }

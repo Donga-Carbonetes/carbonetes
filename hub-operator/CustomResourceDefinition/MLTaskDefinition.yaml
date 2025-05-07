@@ -30,10 +30,13 @@ spec:
                   type: integer
                 label_count:
                   type: integer
+                script:
+                  type: string
               required:
                 - datashape
                 - dataset_size
                 - label_count
+                - script
 
             status:
               type: object

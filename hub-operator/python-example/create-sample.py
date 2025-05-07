@@ -1,12 +1,15 @@
-# create_mltask.py
 from kubernetes import client, config
 from datetime import datetime
 
-config.load_kube_config()  # 클러스터 외부에서 실행 시
-# config.load_incluster_config()  # 클러스터 내부에서 실행 시
+config.load_kube_config()
 
-def create_mltask(script: str, datashape: list, dataset_size: int, label_count: int, namespace="default"):
+def create_mltask_from_file(script_path, datashape, dataset_size, label_count, namespace="default"):
+    script_content = None
+    with open(script_path, 'r') as f:
+        script_content = f.read()
+
     task_name = f"mltask-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+
 
     body = {
         "apiVersion": "ml.carbonetes.io/v1",
@@ -18,7 +21,7 @@ def create_mltask(script: str, datashape: list, dataset_size: int, label_count: 
             "datashape": datashape,
             "dataset_size": dataset_size,
             "label_count": label_count,
-            "script": script
+            "script": script_content  
         }
     }
 
@@ -32,3 +35,11 @@ def create_mltask(script: str, datashape: list, dataset_size: int, label_count: 
     )
     print(f"✅ MLTask {task_name} 생성 완료")
     return task_name
+
+
+create_mltask_from_file(
+    script_path="/carbonetes/exporter/sample_resnet.py",
+    datashape=[3, 32, 32],
+    dataset_size=50000,
+    label_count=10
+)
