@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 config.load_kube_config()
 
 @kopf.on.create('ml.carbonetes.io', 'v1', 'mltasks')
-def handle_mltask(body, spec, meta, namespace, logger, **kwargs):
+def handle_mltask(body, spec, meta, namespace, logger, patch, **kwargs):
     name = meta['name']
     script = spec.get('script')
 
@@ -27,6 +27,9 @@ def handle_mltask(body, spec, meta, namespace, logger, **kwargs):
     batch.create_namespaced_job(namespace=namespace, body=job_manifest)
 
     logger.info(f"[MLTask] Job {name}-job 생성 완료")
+
+    patch.status["phase"] = "waiting"
+    patch.status["startTime"] = datetime.now(timezone.utc).isoformat()
     return {"phase": "waiting", "startTime": datetime.now(timezone.utc).isoformat()}
 
 @kopf.on.delete('ml.carbonetes.io', 'v1', 'mltasks')
