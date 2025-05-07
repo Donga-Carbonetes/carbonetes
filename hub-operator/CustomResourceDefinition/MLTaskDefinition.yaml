@@ -1,0 +1,56 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: mltasks.ml.carbonetes.io
+spec:
+  group: ml.carbonetes.io
+  names:
+    kind: MLTask
+    plural: mltasks
+    singular: mltask
+    shortNames:
+      - mt
+  scope: Namespaced
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                datashape:
+                  type: array
+                  items:
+                    type: integer
+                dataset_size:
+                  type: integer
+                label_count:
+                  type: integer
+              required:
+                - datashape
+                - dataset_size
+                - label_count
+
+            status:
+              type: object
+              properties:
+                phase:
+                  type: string
+                  enum:
+                    - waiting
+                    - ready
+                    - running
+                    - terminated
+                startTime:
+                  type: string
+                  format: date-time
+                dispatchedTime:
+                  type: string
+                  format: date-time
+                endTime:
+                  type: string
+                  format: date-time
