@@ -29,6 +29,37 @@ def handle_mltask(body, spec, meta, namespace, logger, **kwargs):
     logger.info(f"[MLTask] Job {name}-job 생성 완료")
     return {"phase": "running", "dispatchedTime": datetime.utcnow().isoformat()}
 
+@kopf.on.delete('ml.carbonetes.io', 'v1', 'mltasks')
+def delete_mltask(body, spec, meta, namespace, logger, **kwargs):
+    name = meta['name']
+    batch = client.BatchV1Api()
+    core = client.CoreV1Api()
+
+    job_name = f"{name}-job"
+    cm_name = f"{name}-script"
+
+    try:
+        logger.info(f"[MLTask] {name} 삭제 감지 - 관련 Job/ConfigMap 삭제 중...")
+
+        # Job 삭제
+        batch.delete_namespaced_job(
+            name=job_name,
+            namespace=namespace,
+            body=client.V1DeleteOptions(propagation_policy="Foreground")
+        )
+
+        # ConfigMap 삭제
+        core.delete_namespaced_config_map(
+            name=cm_name,
+            namespace=namespace,
+            body=client.V1DeleteOptions()
+        )
+
+        logger.info(f"[MLTask] {name} 관련 리소스 삭제 완료")
+
+    except client.exceptions.ApiException as e:
+        logger.error(f"[MLTask] 삭제 중 오류 발생: {e}")
+
 
 def generate_job_manifest(name):
     return {
@@ -70,3 +101,4 @@ def generate_job_manifest(name):
             }
         }
     }
+
