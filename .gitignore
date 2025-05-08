@@ -9,3 +9,5 @@ __pycache__/
 *.pyc
 mysql-secret.yaml
 .env
+node_modules/
+uploads/
