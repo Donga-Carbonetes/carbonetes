@@ -13,6 +13,7 @@ function SubmitForm({ addTask }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [validationError, setValidationError] = useState(null)
   const [submitSuccess, setSubmitSuccess] = useState(false)
+  const [taskName, setTaskName] = useState("")
 
   const codeFileRef = useRef(null)
   const sampleDataRef = useRef(null)
@@ -81,18 +82,7 @@ function SubmitForm({ addTask }) {
         return
       }
 
-      // Generate a task name based on the code or file
-      let taskName = "새 딥러닝 태스크"
-      if (codeInputType === "text") {
-        // Try to extract a name from the code (e.g., from comments or class names)
-        const nameMatch = codeText.match(/# (.*?) model|class (.*?)[(:]|def (.*?)[(:]|"""(.*?)"""/)
-        if (nameMatch) {
-          const extractedName = nameMatch.find((match, index) => index > 0 && match)
-          if (extractedName) taskName = extractedName.trim()
-        }
-      } else {
-        taskName = codeFile.name.replace(".py", "").replace(/_/g, " ")
-      }
+
 
       // Create a new task
       const newTask = {
@@ -135,6 +125,18 @@ function SubmitForm({ addTask }) {
     <div className="submit-form-container">
       <form onSubmit={handleSubmit} className="submit-form">
         {/* Code Input Section */}
+        <div className="form-group">
+          <label htmlFor="taskName">태스크 이름</label>
+          <input
+            id="taskName"
+            type="text"
+            placeholder="예: ResNet 학습 태스크"
+            value={taskName}
+            onChange={(e) => setTaskName(e.target.value)}
+          />
+          <p className="form-hint">식별하기 쉬운 태스크 이름을 입력하세요.</p>
+        </div>
+
         <div className="form-section">
           <h2>딥러닝 코드 입력</h2>
 
