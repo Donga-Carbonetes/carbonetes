@@ -4,25 +4,39 @@ import { useState, useEffect } from "react"
 import "./TaskMonitor.css"
 
 function TaskMonitor({ tasks }) {
-  const [filteredTasks, setFilteredTasks] = useState(tasks)
   const [activeTab, setActiveTab] = useState("all")
   const [isLoading, setIsLoading] = useState(true)
+  const [filteredTasks, setFilteredTasks] = useState([])
 
   useEffect(() => {
-    // Filter tasks based on the active tab
-    if (activeTab === "all") {
-      setFilteredTasks(tasks)
-    } else {
-      setFilteredTasks(tasks.filter((task) => task.status === activeTab))
+    let isMounted = true // cleanup 대비용
+  
+    const fetchTasks = () => {
+      fetch("http://localhost:4000/api/tasks")
+        .then((res) => res.json())
+        .then((data) => {
+          if (isMounted) {
+            setFilteredTasks(data.tasks)
+            setIsLoading(false)
+          }
+        })
+        .catch((err) => {
+          console.error("목록 로딩 실패:", err)
+          setIsLoading(false)
+        })
     }
-
-    // Simulate loading
-    const timer = setTimeout(() => {
-      setIsLoading(false)
-    }, 500)
-
-    return () => clearTimeout(timer)
-  }, [activeTab, tasks])
+  
+    fetchTasks()
+    const interval = setInterval(fetchTasks, 3000)
+  
+    return () => {
+      isMounted = false
+      clearInterval(interval)
+    }
+  }, [])
+  
+  
+  
 
   const getStatusBadge = (status) => {
     switch (status) {
