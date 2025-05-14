@@ -6,8 +6,13 @@ const app = express()
 const upload = multer({ storage: multer.memoryStorage() })
 const cors = require("cors");
 
-app.use(cors()); 
+ // CORS 허용 (프론트와 통신 허용)
+app.use(cors());
+
+// 태스크 API 라우터 등록 (/routes/tasks.js에 정의된 POST/GET 라우터 사용)
 app.use("/api/tasks", taskRoutes);
+
+// JSON, form 데이터 파싱 허용
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
