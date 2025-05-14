@@ -11,3 +11,4 @@ mysql-secret.yaml
 .env
 node_modules/
 uploads/
+minio-test.ipynb
