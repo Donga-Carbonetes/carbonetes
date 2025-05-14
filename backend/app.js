@@ -14,6 +14,7 @@ app.use(express.urlencoded({ extended: true }))
 // 전체 태스크 조회
 app.get("/api/tasks", async (req, res) => {
   const tasks = await Task.findAll();
+  order: [['created_at', 'ASC']], // 오래된 순으로 정렬
   res.json({ tasks }); 
 })
 
