@@ -18,7 +18,7 @@ function TaskMonitor() {
           name: task.taskname_user,  
           datasetSize: task.dataset_size,
           targetLabels: task.label_count,
-          status: task.status === "ready" ? "waiting" : task.status,
+          status: (task.status || "ready") === "ready" ? "waiting" : task.status,
           createdAt: task.created_at,
           updatedAt: task.updated_at,
         }));
