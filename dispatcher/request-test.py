@@ -17,6 +17,3 @@ for i in range(5):
     res = requests.post("http://localhost:5000/new-task", json=task)
     json = res.json()
     print(f"📥 작업 등록됨: {json['message']}")
-
-
-
