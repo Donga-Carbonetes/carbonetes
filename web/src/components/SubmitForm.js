@@ -83,9 +83,9 @@ function SubmitForm({ addTask }) {
       }
 
       const formData = new FormData()
-      formData.append("name", taskName)
-      formData.append("datasetSize", datasetSize)
-      formData.append("targetLabels", targetLabels)
+      formData.append("taskname_user", taskName)
+      formData.append("dataset_size", datasetSize);     
+      formData.append("label_count", targetLabels);      
       formData.append("codeType", codeInputType)
 
       if (codeInputType === "text") {
@@ -94,9 +94,7 @@ function SubmitForm({ addTask }) {
         formData.append("codeFile", codeFile)
       }
 
-      if (sampleData) {
-        formData.append("sampleData", sampleData)
-      }
+      formData.append("sampleData", sampleData)
 
       const response = await fetch("http://localhost:4000/api/tasks", {
         method: "POST",
@@ -114,8 +112,8 @@ function SubmitForm({ addTask }) {
       setSampleData(null)
       setDatasetSize("")
       setTargetLabels("")
-      codeFileRef.current.value = ""
-      sampleDataRef.current.value = ""
+      if (codeFileRef.current) codeFileRef.current.value = ""
+      if (sampleDataRef.current) sampleDataRef.current.value = ""
     } catch (err) {
       console.error(err)
       setValidationError("태스크 제출 중 오류가 발생했습니다.")
@@ -129,7 +127,6 @@ function SubmitForm({ addTask }) {
       <form onSubmit={handleSubmit} className="submit-form">
         <div className="form-section">
           <h2>태스크 정보</h2>
-
           <div className="form-group">
             <label htmlFor="taskName">태스크 이름</label>
             <input
@@ -145,7 +142,6 @@ function SubmitForm({ addTask }) {
 
         <div className="form-section">
           <h2>딥러닝 코드 입력</h2>
-
           <div className="code-input-tabs">
             <button
               type="button"
@@ -174,8 +170,7 @@ function SubmitForm({ addTask }) {
                 onChange={(e) => setCodeText(e.target.value)}
               />
               <p className="form-hint">
-                코드에는 batch_size, learning_rate, training_epochs, loss_function, network, optimizer 변수가 포함되어야
-                합니다.
+                코드에는 batch_size, learning_rate, training_epochs, loss_function, network, optimizer 변수가 포함되어야 합니다.
               </p>
             </div>
           ) : (
@@ -203,7 +198,6 @@ function SubmitForm({ addTask }) {
 
         <div className="form-section">
           <h2>데이터셋 정보</h2>
-
           <div className="form-group">
             <label htmlFor="datasetSize">전체 데이터셋 크기</label>
             <input

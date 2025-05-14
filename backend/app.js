@@ -1,51 +1,64 @@
 const express = require("express")
-const cors = require("cors")
 const multer = require("multer")
+const Task = require("./models/task")
+const taskRoutes = require("./routes/tasks");
 const app = express()
-const PORT = 4000
-
-app.use(cors())
-app.use(express.json())
-
-// 메모리 저장소 (DB 대신)
-const tasks = []
-
-// 파일 업로드 처리
 const upload = multer({ storage: multer.memoryStorage() })
+const cors = require("cors");
 
-// GET /api/tasks → 전체 목록
-app.get("/api/tasks", (req, res) => {
-  res.json({ tasks })
+app.use(cors()); 
+app.use("/api/tasks", taskRoutes);
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
+
+// 전체 태스크 조회
+app.get("/api/tasks", async (req, res) => {
+  const tasks = await Task.findAll();
+  res.json({ tasks }); 
 })
 
-// POST /api/tasks → 태스크 등록
-app.post("/api/tasks", upload.fields([
-  { name: "codeFile", maxCount: 1 },
-  { name: "sampleData", maxCount: 1 }
-]), (req, res) => {
-  const { name, datasetSize, targetLabels, codeType, codeText } = req.body
-  const id = `task_${Math.random().toString(36).substring(2, 12)}`
-  const createdAt = new Date().toISOString()
 
-  const newTask = {
-    id,
-    name,
-    datasetSize: parseInt(datasetSize),
-    targetLabels: parseInt(targetLabels),
-    codeType,
-    codeText: codeText || null,
-    codeFileName: req.files?.codeFile?.[0]?.originalname || null,
-    sampleDataName: req.files?.sampleData?.[0]?.originalname || null,
-    status: "waiting",
-    createdAt,
-    updatedAt: createdAt,
+// POST 요청: 태스크 등록
+app.post(
+  "/api/tasks",
+  upload.fields([
+    { name: "codeFile", maxCount: 1 },
+    { name: "sampleData", maxCount: 1 },
+  ]),
+  async (req, res) => {
+    try {
+      const { name, datasetSize, targetLabels, codeType, codeText } = req.body
+      const codeFile = req.files?.codeFile?.[0]
+      const sampleData = req.files?.sampleData?.[0]
+
+      const id = `task_${Math.random().toString(36).substring(2, 12)}`
+      const createdAt = new Date().toISOString()
+      const updatedAt = createdAt
+
+      const newTask = await Task.create({
+        id,
+        name,
+        datasetSize,
+        targetLabels,
+        codeType,
+        codeText,
+        codeFileName: codeFile?.originalname || null,
+        sampleDataName: sampleData?.originalname || null,
+        createdAt,
+        updatedAt,
+      })
+
+      console.log("새 태스크 등록됨:", newTask.toJSON())
+      res.status(201).json({ newTask })
+    } catch (err) {
+      console.error("태스크 등록 중 오류:", err)
+      res.status(500).json({ error: "태스크 등록 실패" })
+    }
   }
+)
 
-  tasks.push(newTask)
-  res.json({ message: "등록 완료", newTask })
-})
-
-// 서버 시작
+// 서버 실행
+const PORT = 4000
 app.listen(PORT, () => {
   console.log(`✅ Server listening on http://localhost:${PORT}`)
 })

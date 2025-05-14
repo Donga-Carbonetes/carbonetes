@@ -1,5 +1,5 @@
 const { Sequelize } = require("sequelize");
-require("dotenv").config(); // ⬅️ .env 읽기
+require("dotenv").config(); // .env 읽기
 
 const sequelize = new Sequelize(
   process.env.DB_NAME,     // DB 이름
@@ -9,8 +9,9 @@ const sequelize = new Sequelize(
     host: process.env.DB_HOST,
     port: process.env.DB_PORT,
     dialect: "mysql",
-    logging: false, // SQL 로그 보기 싫으면 false
+    logging: false, // SQL 로그 false
   }
 );
+
 
 module.exports = sequelize;
