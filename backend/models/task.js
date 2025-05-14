@@ -2,11 +2,12 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
 
+// Task 모델 정의
 const Task = sequelize.define("Task", {
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
-    autoIncrement: true,
+    autoIncrement: true, // 자동 증가
   },
   task_name: {
     type: DataTypes.STRING,
@@ -45,9 +46,10 @@ const Task = sequelize.define("Task", {
     type: DataTypes.INTEGER,
   },
 }, {
-  tableName: "task_info",
-  timestamps: true,
-  createdAt: 'created_at',  
+  tableName: "task_info", 
+  timestamps: true, // createdAt timestamp로 자동 관리
+  createdAt: 'created_at',
+  updatedAt: false,
 });
 
 module.exports = Task;
