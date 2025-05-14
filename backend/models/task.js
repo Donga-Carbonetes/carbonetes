@@ -29,9 +29,9 @@ const Task = sequelize.define("Task", {
   cluster_name: {
     type: DataTypes.STRING,
   },
-  created_at: {
-    type: DataTypes.DATE,
-  },
+  // created_at: {
+  //   type: DataTypes.DATE,
+  // },
   dispatched_at: {
     type: DataTypes.DATE,
   },
@@ -46,7 +46,8 @@ const Task = sequelize.define("Task", {
   },
 }, {
   tableName: "task_info",
-  timestamps: false,
+  timestamps: true,
+  createdAt: 'created_at',  
 });
 
 module.exports = Task;
