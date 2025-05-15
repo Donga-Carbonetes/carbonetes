@@ -1,0 +1,23 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: mltask-status-editor
+  namespace: default
+rules:
+  - apiGroups: ["ml.carbonetes.io"]
+    resources: ["mltasks", "mltasks/status"]
+    verbs: ["get", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: mltask-status-editor-binding
+  namespace: default
+subjects:
+  - kind: ServiceAccount
+    name: default        # 사용 중인 ServiceAccount 이름
+    namespace: default   # 파드가 속한 네임스페이스
+roleRef:
+  kind: Role
+  name: mltask-status-editor
+  apiGroup: rbac.authorization.k8s.io
