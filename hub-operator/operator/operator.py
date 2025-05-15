@@ -17,7 +17,7 @@ def handle_mltask(body, spec, meta, namespace, logger, patch, **kwargs):
 
     cm = client.V1ConfigMap(
         metadata=client.V1ObjectMeta(name=f"{name}-script"),
-        data={"main.py": script}
+        data={f"{name}.py": script}
     )
     core = client.CoreV1Api()
     core.create_namespaced_config_map(namespace, cm)
@@ -90,6 +90,12 @@ def generate_job_manifest(name):
                                 {"name": "MYSQL_USER", "value": "root"},
                                 {"name": "MYSQL_PASSWORD", "value": os.getenv("MYSQL_PASSWORD")},
                                 {"name": "MYSQL_DATABASE", "value": "carbonetes"},
+                                {"name": "TASK_NAME", "value": f"{name}"},
+                                {"name": "MINIO_HOST", "value": "minio-1747233997.minio"},
+                                {"name": "MINIO_PORT", "value": "9000"},
+                                {"name": "MINIO_USER", "value": "rootuser"},
+                                {"name": "MINIO_PASSWORD", "value": "rootpass123"},
+
                             ]
                         }
                     ],
