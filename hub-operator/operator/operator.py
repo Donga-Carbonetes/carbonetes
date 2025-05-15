@@ -76,6 +76,7 @@ def generate_job_manifest(name):
             "ttlSecondsAfterFinished": 600,  # 5분뒤 정리 job 삭제
             "template": {
                 "spec": {
+                    "serviceAccountName": "mltask-updater",
                     "containers": [
                         {
                             "name": "exporter",
