@@ -13,3 +13,4 @@ node_modules/
 uploads/
 minio-test.ipynb
 create-sample.py
+hub-operator/python-example/create-sample.py
