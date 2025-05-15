@@ -35,50 +35,97 @@ router.post("/", upload.fields([//사용자가 올리는 파일 2개(codeFile, s
     console.error(err);
     res.status(500).json({ message: "DB 저장 실패", error: err });
   }
-  const k8s = require('@kubernetes/client-node');
+
+const k8s = require('@kubernetes/client-node');
+const https = require('https');
+
+async function listCRDGroups() {
+  const kc = new k8s.KubeConfig();
+  kc.loadFromDefault(); // ~/.kube/config 로드
+
+
+
+
+  const url = kc.getCurrentCluster().server + '/apis/apiextensions.k8s.io/v1/customresourcedefinitions';
+
+  return new Promise((resolve, reject) => {
+    https.get(url, (res) => {
+      let data = '';
+
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        const json = JSON.parse(data);
+        const groups = new Set();
+
+        for (const item of json.items) {
+          groups.add(item.spec.group);
+        }
+
+        console.log('📦 등록된 Custom Resource 그룹 목록:');
+        for (const group of groups) {
+          console.log('🔹', group);
+        }
+
+        resolve(Array.from(groups));
+      });
+    }).on('error', err => {
+      console.error('❌ 요청 실패:', err);
+      reject(err);
+    });
+  });
+}
+
+// 실행
+listCRDGroups();
+
+
+
 const fs = require('fs');
 const dayjs = require('dayjs');
 
 async function createMLTaskFromFile(scriptPath, datashape, datasetSize, labelCount, namespace = 'default') {
-  // 스크립트 파일 읽기
   const scriptContent = fs.readFileSync(scriptPath, 'utf8');
-
-  // 태스크 이름 생성
   const taskName = `mltask-${dayjs().format('YYYYMMDDHHmmss')}`;
+  datashape = [3, 32, 32];
 
-  // MLTask 객체 정의
   const body = {
-    apiVersion: 'ml.carbonetes.io/v1',
-    kind: 'MLTask',
-    metadata: {
-      name: taskName,
-    },
-    spec: {
-      datashape: datashape,
-      dataset_size: datasetSize,
-      label_count: labelCount,
-      script: scriptContent,
+    "apiVersion": 'ml.carbonetes.io/v1',
+    "kind": 'MLTask',
+    "metadata": { "name": taskName },
+    "spec": {
+      "datashape": datashape,
+      "dataset_size": datasetSize,
+      "label_count": labelCount,
+      "script": scriptContent,
     },
   };
 
-  // kubeconfig 로드 및 API 클라이언트 설정
   const kc = new k8s.KubeConfig();
   kc.loadFromDefault();
+
   const k8sApi = kc.makeApiClient(k8s.CustomObjectsApi);
 
+  console.log('✅ 현재 컨텍스트:', kc.getCurrentContext());
+
+  // 여기가 핵심: 파라미터 확인용
+  console.log('▶️ group:', 'ml.carbonetes.io');
+  console.log('▶️ version:', 'v1');
+  console.log('▶️ namespace:', namespace);
+  console.log('▶️ plural:', 'mltasks');
+
   try {
-    const res = await k8sApi.createNamespacedCustomObject(
-      'ml.carbonetes.io', // group
-      'v1',               // version
-      namespace,          // namespace
-      'mltasks',          // plural
-      body                // body
+    const result = await k8sApi.createNamespacedCustomObject(
+      'ml.carbonetes.io', // ✅ group
+      'v1',               // ✅ version
+      'deafult',
+      'mltasks',          // ✅ plural
+      body                // ✅ body
     );
 
     console.log(`✅ MLTask ${taskName} 생성 완료`);
-    return taskName;
+    return result.body;
   } catch (err) {
-    console.error('❌ MLTask 생성 실패:', err.body || err);
+    console.error('❌ MLTask 생성 실패:', err.body || err.message || err);
   }
 }
 
