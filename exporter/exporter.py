@@ -11,6 +11,7 @@ import mysql.connector
 import ast
 from minio import Minio
 from minio.error import S3Error
+from kubernetes import client, config
 
 
 def load_user_module(path="/mnt/main.py"):
@@ -114,6 +115,36 @@ def upload_file_minio(local_file_path, task_name):
         print(f"❌ 업로드 실패: {e}")
 
 
+def update_k8s_mltask_status(name, namespace):
+    config.load_incluster_config()
+    api = client.CustomObjectsApi()
+
+    group="ml.carbonetes.io",
+    version="v1",
+    namespace='default',
+    plural="mltasks",
+    body = {
+        "status": {
+            "phase": 'ready'
+        }
+    }
+
+    try:
+        api.patch_namespaced_custom_object_status(
+            group=group,
+            version=version,
+            namespace=namespace,
+            plural=plural,
+            name=name,
+            body=body
+        )
+        print(f"✅ mltask '{name}' 상태를 'ready'로 업데이트 했습니다.")
+    except Exception as e:
+        print(f"❌ mltask 상태 업데이트 실패: {e}")
+                
+
+
+
 if __name__ == "__main__":
     load_dotenv()
     task_name = os.getenv("TASK_NAME")
@@ -183,6 +214,8 @@ if __name__ == "__main__":
     conn.commit()
 
     print(f"✅ DB에 task 업데이트 완료!")
+
+    update_k8s_mltask_status(task_name, 'default')
 
     cursor.close()
     conn.close()
