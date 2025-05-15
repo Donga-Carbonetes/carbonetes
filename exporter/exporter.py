@@ -83,7 +83,8 @@ def profiling(profile, model, optimizer, loss_function):
 
 if __name__ == "__main__":
     load_dotenv()
-    user_module = load_user_module("E:\carbonetes\exporter\sample_resnet.py")
+    user_module = load_user_module("/mnt/main.py") # for docker
+    # user_module = load_user_module("E:\carbonetes\exporter\sample_resnet.py") # for local
 
     # 추출
     profile = extract_training_profile(
