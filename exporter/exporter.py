@@ -119,13 +119,12 @@ def update_k8s_mltask_status(name, namespace):
     config.load_incluster_config()
     api = client.CustomObjectsApi()
 
-    group="ml.carbonetes.io",
-    version="v1",
-    namespace='default',
-    plural="mltasks",
+    group = "ml.carbonetes.io"
+    version = "v1"
+    plural = "mltasks"
     body = {
         "status": {
-            "phase": 'ready'
+            "phase": "ready"
         }
     }
 
