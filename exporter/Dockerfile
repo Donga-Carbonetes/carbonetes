@@ -12,7 +12,8 @@ RUN apt-get update && \
         torch torchvision \
         numpy \
         python-dotenv \
-        mysql-connector-python
+        mysql-connector-python \
+        minio
 
 # 환경변수는 .env 대신 Kubernetes Job에서 주입
 CMD ["python", "exporter.py"]
