@@ -12,3 +12,4 @@ mysql-secret.yaml
 node_modules/
 uploads/
 minio-test.ipynb
+create-sample.py
