@@ -13,7 +13,8 @@ RUN apt-get update && \
         numpy \
         python-dotenv \
         mysql-connector-python \
-        minio
+        minio \
+        kubernetes
 
 # 환경변수는 .env 대신 Kubernetes Job에서 주입
 CMD ["python", "exporter.py"]
