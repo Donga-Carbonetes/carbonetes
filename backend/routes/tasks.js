@@ -77,6 +77,7 @@ router.post("/", upload.fields([
       codeText: codeText || null,
       codeFileName: req.files?.codeFile?.[0]?.originalname || null,
       sampleDataName: req.files?.sampleData?.[0]?.originalname || null,
+      status: "ready",  
     });
 
     // ✅ MLTask 생성 함수 호출
