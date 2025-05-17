@@ -66,9 +66,10 @@ router.post("/", upload.fields([
 ]), async (req, res) => {
   try {
     const { taskname_user, dataset_size, label_count, codeType, codeText } = req.body;
-
+    const taskId = uuidv4(); 
     const task = await Task.create({
       id: uuidv4(),
+      task_name: `mltask-${taskId}`, 
       taskname_user,
       dataset_size,
       label_count,
