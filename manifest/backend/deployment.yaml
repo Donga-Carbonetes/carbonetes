@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: carbon-backend
-          image: twkji/carbon-back
+          image: twkji/carbon-backend
           ports:
             - containerPort: 4000
           env:
