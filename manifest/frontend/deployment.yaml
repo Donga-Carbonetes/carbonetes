@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: react-frontend
+  name: carbon-frontend
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: react-frontend
+      app: carbon-frontend
   template:
     metadata:
       labels:
-        app: react-frontend
+        app: carbon-frontend
     spec:
       containers:
-        - name: react-frontend
+        - name: carbon-frontend
           image: twkji/carbon-frontend
           ports:
             - containerPort: 3000
