@@ -5,7 +5,6 @@ const express = require("express");
 const multer = require("multer");
 const { v4: uuidv4 } = require("uuid");
 const Task = require("../models/task");
-const k8s = require('@kubernetes/client-node'); // Kubernetes 클라이언트
 const fs = require("fs");
 const dayjs = require("dayjs");
 
@@ -13,13 +12,9 @@ const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() }); // 메모리 저장
 
 /**
- * ✅ MLTask 생성 함수
  */
-async function createMLTaskFromFile(taskName, scriptPath, datashape, datasetSize, labelCount, namespace = 'default') {
-  const scriptContent = fs.readFileSync(scriptPath, 'utf8');
-
+async function createMLTask(taskName, scriptContent, datashape, datasetSize, labelCount, namespace = 'default') {
   const body = {
-    apiVersion: 'ml.carbonetes.io/v1', // apiVersion은 반드시 group/version 형식
     kind: 'MLTask',
     metadata: { name: taskName },
     spec: {
@@ -31,23 +26,19 @@ async function createMLTaskFromFile(taskName, scriptPath, datashape, datasetSize
   };
 
   const kc = new k8s.KubeConfig();
-  kc.loadFromDefault(); // ~/.kube/config 사용
-
-  const k8sApi = kc.makeApiClient(k8s.CustomObjectsApi); 
 
   console.log('✅ 현재 컨텍스트:', kc.getCurrentContext());
   console.log('🛠️ [디버깅] MLTask 생성 시 body:', JSON.stringify(body, null, 2));
 
   try {
-    const result = await k8sApi.createNamespacedCustomObject.call(
-      k8sApi,
+    const result = await k8sApi.createNamespacedCustomObject(
       'ml.carbonetes.io',
       'v1',
       namespace,
       'mltasks',
       body
     );
-  
+
     console.log(`✅ MLTask ${taskName} 생성 완료`);
     return result.body;
   } catch (err) {
@@ -67,6 +58,13 @@ router.post("/", upload.fields([
     const { taskname_user, dataset_size, label_count, codeType, codeText, data_shape } = req.body;
     const taskId = uuidv4(); 
     const taskName = `mltask-${taskId}`;
+
+    // ✅ 코드 내용 결정 (텍스트 or 업로드 파일)
+    const scriptContent =
+      codeType === "text"
+        ? codeText
+        : req.files?.codeFile?.[0]?.buffer.toString("utf-8");
+
     const task = await Task.create({
       id: taskId,
       task_name: taskName,
@@ -74,17 +72,17 @@ router.post("/", upload.fields([
       dataset_size,
       label_count,
       codeType,
-      data_shape: data_shape || "", 
-      codeText: codeText || null,
+      data_shape: data_shape || "",
+      codeText: codeType === "text" ? codeText : null,
       codeFileName: req.files?.codeFile?.[0]?.originalname || null,
       sampleDataName: req.files?.sampleData?.[0]?.originalname || null,
-      status: "ready",  
+      status: "ready",
     });
 
-    // ✅ MLTask 생성 함수 호출 
-    await createMLTaskFromFile(
+    // ✅ MLTask 생성
+    await createMLTask(
       taskName,
-      "/carbonetes/exporter/sample_resnet.py",
+      scriptContent,
       data_shape.split(",").map(x => parseInt(x.trim())),
       parseInt(dataset_size),
       parseInt(label_count)
