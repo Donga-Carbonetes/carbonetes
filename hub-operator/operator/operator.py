@@ -3,7 +3,7 @@ import os
 from kubernetes import client, config
 from datetime import datetime, timezone
 
-config.load_kube_config()
+config.load_incluster_config()
 
 @kopf.on.create('ml.carbonetes.io', 'v1', 'mltasks')
 def handle_mltask(body, spec, meta, namespace, logger, patch, **kwargs):
