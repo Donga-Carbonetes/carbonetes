@@ -5,16 +5,19 @@ const express = require("express");
 const multer = require("multer");
 const { v4: uuidv4 } = require("uuid");
 const Task = require("../models/task");
+const k8s = require('@kubernetes/client-node');
 const fs = require("fs");
 const dayjs = require("dayjs");
 
 const router = express.Router();
-const upload = multer({ storage: multer.memoryStorage() }); // 메모리 저장
+const upload = multer({ storage: multer.memoryStorage() });
 
 /**
+ * ✅ MLTask 생성 함수 (scriptContent 기반)
  */
 async function createMLTask(taskName, scriptContent, datashape, datasetSize, labelCount, namespace = 'default') {
   const body = {
+    apiVersion: 'ml.carbonetes.io/v1',
     kind: 'MLTask',
     metadata: { name: taskName },
     spec: {
@@ -26,6 +29,8 @@ async function createMLTask(taskName, scriptContent, datashape, datasetSize, lab
   };
 
   const kc = new k8s.KubeConfig();
+  kc.loadFromDefault();
+  const k8sApi = kc.makeApiClient(k8s.CustomObjectsApi);
 
   console.log('✅ 현재 컨텍스트:', kc.getCurrentContext());
   console.log('🛠️ [디버깅] MLTask 생성 시 body:', JSON.stringify(body, null, 2));
