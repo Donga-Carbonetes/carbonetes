@@ -12,6 +12,7 @@ spec:
       labels:
         app: carbon-backend
     spec:
+      serviceAccountName: mltask-operator
       containers:
         - name: carbon-backend
           image: twkji/carbon-backend
