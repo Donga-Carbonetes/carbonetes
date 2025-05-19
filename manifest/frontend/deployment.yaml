@@ -17,3 +17,14 @@ spec:
           image: twkji/carbon-front
           ports:
             - containerPort: 3000
+          env:
+           - name: BACKEND_HOST
+             valueFrom:
+              secretKeyRef:
+               name: backend-secret
+               key: BACKEND_HOST
+           - name: BACKEND_PORT
+             valueFrom:
+               secretKeyRef:
+                 name: backend-secret
+                 key: BACKEND_PORT
