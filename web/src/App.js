@@ -4,7 +4,8 @@ import { useState } from "react"
 import SubmitForm from "./components/SubmitForm"
 import TaskMonitor from "./components/TaskMonitor"
 import "./App.css"
-const API_URL = "http://localhost:4000/api/tasks"; // 백엔드 주소
+// const API_URL = "http://localhost:4000/api/tasks"; // 백엔드 주소
+const API_URL = "http://carbon-backend:4000/api/tasks"; // 백엔드 주소
 
 function App() {
   const [activeTab, setActiveTab] = useState("submit")
