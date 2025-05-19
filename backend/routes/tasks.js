@@ -67,14 +67,15 @@ router.post("/", upload.fields([
   try {
     const { taskname_user, dataset_size, label_count, codeType, codeText } = req.body;
     const taskId = uuidv4(); 
+    const taskName = `mltask-${taskId}`; // ✅ 변수로 명확히 지정
     const task = await Task.create({
-      id: uuidv4(),
-      task_name: `mltask-${taskId}`, 
+      id: taskId,
+      task_name: taskName,
       taskname_user,
       dataset_size,
       label_count,
       codeType,
-      data_shape: "",
+      data_shape: data_shape || "", 
       codeText: codeText || null,
       codeFileName: req.files?.codeFile?.[0]?.originalname || null,
       sampleDataName: req.files?.sampleData?.[0]?.originalname || null,
@@ -84,7 +85,7 @@ router.post("/", upload.fields([
     // ✅ MLTask 생성 함수 호출
     await createMLTaskFromFile(
       "/carbonetes/exporter/sample_resnet.py", 
-      [3, 32, 32],                             
+      data_shape.split(",").map(x => parseInt(x.trim())),
       parseInt(dataset_size),
       parseInt(label_count)
     );

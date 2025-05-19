@@ -14,7 +14,7 @@ function SubmitForm({ addTask }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [validationError, setValidationError] = useState(null)
   const [submitSuccess, setSubmitSuccess] = useState(false)
-
+  const [dataShape, setDataShape] = useState("")
   const codeFileRef = useRef(null)
   const sampleDataRef = useRef(null)
 
@@ -84,10 +84,10 @@ function SubmitForm({ addTask }) {
 
       const formData = new FormData()
       formData.append("taskname_user", taskName)
-      formData.append("dataset_size", datasetSize);     
-      formData.append("label_count", targetLabels);      
+      formData.append("dataset_size", datasetSize);
+      formData.append("label_count", targetLabels);
       formData.append("codeType", codeInputType)
-
+      formData.append("data_shape", dataShape)
       if (codeInputType === "text") {
         formData.append("codeText", codeText)
       } else {
@@ -195,7 +195,17 @@ function SubmitForm({ addTask }) {
             onChange={(e) => setSampleData(e.target.files?.[0] || null)}
           />
         </div>
-
+        <div className="form-group">
+          <label htmlFor="dataShape">데이터 쉐입</label>
+          <input
+            id="dataShape"
+            type="text"
+            placeholder="예: 3,32,32"
+            value={dataShape}
+            onChange={(e) => setDataShape(e.target.value)}
+          />
+          <p className="form-hint">쉼표로 구분된 숫자를 입력하세요 (예: 3,32,32)</p>
+        </div>
         <div className="form-section">
           <h2>데이터셋 정보</h2>
           <div className="form-group">
