@@ -15,9 +15,8 @@ const upload = multer({ storage: multer.memoryStorage() }); // 메모리 저장
 /**
  * ✅ MLTask 생성 함수
  */
-async function createMLTaskFromFile(scriptPath, datashape, datasetSize, labelCount, namespace = 'default') {
+async function createMLTaskFromFile(taskName, scriptPath, datashape, datasetSize, labelCount, namespace = 'default') {
   const scriptContent = fs.readFileSync(scriptPath, 'utf8');
-  const taskName = `mltask-${dayjs().format('YYYYMMDDHHmmss')}`;
 
   const body = {
     apiVersion: 'ml.carbonetes.io/v1', // apiVersion은 반드시 group/version 형식
@@ -44,7 +43,7 @@ async function createMLTaskFromFile(scriptPath, datashape, datasetSize, labelCou
       k8sApi,
       'ml.carbonetes.io',
       'v1',
-      'default',
+      namespace,
       'mltasks',
       body
     );
@@ -65,9 +64,9 @@ router.post("/", upload.fields([
   { name: "sampleData", maxCount: 1 }
 ]), async (req, res) => {
   try {
-    const { taskname_user, dataset_size, label_count, codeType, codeText } = req.body;
+    const { taskname_user, dataset_size, label_count, codeType, codeText, data_shape } = req.body;
     const taskId = uuidv4(); 
-    const taskName = `mltask-${taskId}`; // ✅ 변수로 명확히 지정
+    const taskName = `mltask-${taskId}`;
     const task = await Task.create({
       id: taskId,
       task_name: taskName,
@@ -82,9 +81,10 @@ router.post("/", upload.fields([
       status: "ready",  
     });
 
-    // ✅ MLTask 생성 함수 호출
+    // ✅ MLTask 생성 함수 호출 
     await createMLTaskFromFile(
-      "/carbonetes/exporter/sample_resnet.py", 
+      taskName,
+      "/carbonetes/exporter/sample_resnet.py",
       data_shape.split(",").map(x => parseInt(x.trim())),
       parseInt(dataset_size),
       parseInt(label_count)
