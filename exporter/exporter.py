@@ -12,6 +12,11 @@ import ast
 from minio import Minio
 from minio.error import S3Error
 from kubernetes import client, config
+import requests
+
+SCHEDULER_HOST = os.getenv("SCHEDULER_HOST")
+SCHEDULER_PORT= os.getenv("SCHEDULER_PORT")
+
 
 
 def load_user_module(path="/mnt/main.py"):
@@ -96,23 +101,28 @@ def upload_file_minio(local_file_path, task_name):
 
     host = f"{minio_host}:{minio_port}"
     client = Minio(
-    host,
-    access_key=minio_user,
-    secret_key=minio_password,
-    secure=False
+        host,
+        access_key=minio_user,
+        secret_key=minio_password,
+        secure=False
     )
 
     bucket_name = "mybucket"
     object_name = f"{task_name}.py"
-    
+
     if not client.bucket_exists(bucket_name):
         client.make_bucket(bucket_name)
-    
+
     try:
         client.fput_object(bucket_name, object_name, local_file_path)
         print(f"✅ '{object_name}' 업로드 성공")
+        # 접근 가능한 URL 생성
+        file_url = f"http://{host}/{bucket_name}/{object_name}"
+        print(f"✅ task_url =  {file_url} ")
+        return file_url
     except S3Error as e:
         print(f"❌ 업로드 실패: {e}")
+        return None
 
 
 def update_k8s_mltask_status(name, namespace):
@@ -142,6 +152,21 @@ def update_k8s_mltask_status(name, namespace):
         print(f"❌ mltask 상태 업데이트 실패: {e}")
                 
 
+def register_task_to_scheduler(task_name, estimated_time):
+    url = f"http://{SCHEDULER_HOST}:{SCHEDULER_PORT}/schedule"
+    payload = {
+        "task_name": task_name,
+        "estimated_time": int(estimated_time)
+    }
+
+    try:
+        response = requests.post(url, json=payload)
+        if response.status_code == 200:
+            print(f"✅ 스케줄러에 태스크 등록 성공: {response.text}")
+        else:
+            print(f"❌ 스케줄러 등록 실패 [{response.status_code}]: {response.text}")
+    except Exception as e:
+        print(f"❌ 스케줄러 요청 중 예외 발생: {e}")
 
 
 if __name__ == "__main__":
@@ -149,7 +174,6 @@ if __name__ == "__main__":
     task_name = os.getenv("TASK_NAME")
 
     local_path = f"/mnt/{task_name}.py" # for docker 
-    # local_path = "E:\carbonetes\exporter\sample_resnet.py" # for local test
 
     user_module = load_user_module(local_path) 
     
@@ -203,13 +227,18 @@ if __name__ == "__main__":
 
     standard_time = times[5]
 
+    task_url = upload_file_minio(local_path, task_name)
+
+   # DB 업데이트 쿼리 (task_url도 같이 업데이트)
     update_query = """
-    UPDATE task_info SET estimated_time=%s, status='ready' WHERE task_name=%s
+        UPDATE task_info 
+        SET estimated_time=%s, status='ready', task_url=%s 
+        WHERE task_name=%s
     """
 
     estimated_time = standard_time * profile['hyperparameters']['epochs']
 
-    cursor.execute(update_query, (estimated_time, task_name))
+    cursor.execute(update_query, (estimated_time, task_url, task_name ))
     conn.commit()
 
     print(f"✅ DB에 task 업데이트 완료!")
@@ -219,7 +248,4 @@ if __name__ == "__main__":
     cursor.close()
     conn.close()
 
-    # minio에 파일 업로드하기
-    upload_file_minio(local_path, task_name)
-
-    # 끝나고 스케줄러에 새로운 작업이 생겼다고 알려주기
+    register_task_to_scheduler(task_name, estimated_time)
