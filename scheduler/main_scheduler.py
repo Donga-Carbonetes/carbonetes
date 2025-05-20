@@ -2,57 +2,73 @@ from flask import Flask, request, jsonify
 from queue import Queue
 from threading import Thread
 import time
+import logging
+import sys
+
+from task_processor import process_task
 
 app = Flask(__name__)
 data_queue = Queue()
 
-# 사용자 정의 처리 함수 (로직 구현 예정)
-def process_task(task_name, estimated_time):
-    print(f"[처리 시작] 작업 이름: {task_name}, 예상 시간: {estimated_time}초")
-    
-
-    time.sleep(estimated_time)
-    print(f"[처리 완료] 작업 이름: {task_name}")
+# -----------------------
+# 🔧 Logging 설정
+# -----------------------
+logging.basicConfig(
+    level=logging.INFO,
+    format='[%(asctime)s] [%(levelname)s] %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout)  # 콘솔/로그 수집 시스템으로 출력
+    ]
+)
 
 # 큐에서 뽑아 데이터 처리
 def process_queue():
     while True:
-        if not data_queue.empty():
+        try:
             task = data_queue.get()
-            task_name = task['task_name']
-            estimated_time = task['estimated_time']
+            task_name = task.get('task_name')
+            estimated_time = task.get('estimated_time', 0)
             process_task(task_name, estimated_time)
             data_queue.task_done()
-        else:
-            time.sleep(0.5)  # 큐가 비었을 때 과도한 루프 방지용
+        except Exception as e:
+            logging.error(f"[Thread Error] 큐 처리 중 오류 발생: {e}")
 
 # 작업 처리 스레드 시작
 worker = Thread(target=process_queue, daemon=True)
 worker.start()
 
 # Enqueue End Point
-@app.route('/enqueue', methods=['POST'])
+@app.route('/schedule/enqueue', methods=['POST'])
 def enqueue():
     if not request.is_json:
+        logging.warning("enqueue 요청이 JSON이 아님")
         return jsonify({"error": "JSON 형식이어야 합니다."}), 400
 
     data = request.get_json()
 
     if 'task_name' not in data or 'estimated_time' not in data:
+        logging.warning("enqueue 요청에 필요한 키가 없음")
         return jsonify({"error": "task_name과 estimated_time이 필요합니다."}), 400
 
-    task = {
-        "task_name": data['task_name'],
-        "estimated_time": data['estimated_time']
-    }
+    try:
+        task = {
+            "task_name": data['task_name'],
+            "estimated_time": int(data['estimated_time']) # 초 단위 정수값 사용 
+        }
+        data_queue.put(task)
+        logging.info(f"작업 등록됨: {task}")
+        return jsonify({"status": "작업이 큐에 등록되었습니다.", "task": task}), 200
+    except Exception as e:
+        logging.error(f"enqueue 처리 중 오류: {e}")
+        return jsonify({"error": "요청 처리 중 오류 발생"}), 500
 
-    data_queue.put(task)
-    return jsonify({"status": "작업이 큐에 등록되었습니다.", "task": task}), 200
-
-# Queue 확인용 제거예정
+# Queue 크기 확인
 @app.route('/queue_size', methods=['GET'])
 def queue_size():
-    return jsonify({"queue_size": data_queue.qsize()}), 200
+    size = data_queue.qsize()
+    logging.info(f"큐 크기 확인 요청 - 현재 큐 크기: {size}")
+    return jsonify({"queue_size": size}), 200
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=18080)
+    logging.info("Flask 앱 시작됨 (0.0.0.0:28000)")
+    app.run(debug=False, host='0.0.0.0', port=28000)
