@@ -118,6 +118,7 @@ def upload_file_minio(local_file_path, task_name):
         print(f"✅ '{object_name}' 업로드 성공")
         # 접근 가능한 URL 생성
         file_url = f"http://{host}/{bucket_name}/{object_name}"
+        print(f"✅ task_url =  {file_url} ")
         return file_url
     except S3Error as e:
         print(f"❌ 업로드 실패: {e}")
@@ -173,7 +174,6 @@ if __name__ == "__main__":
     task_name = os.getenv("TASK_NAME")
 
     local_path = f"/mnt/{task_name}.py" # for docker 
-    # local_path = "E:\carbonetes\exporter\sample_resnet.py" # for local test
 
     user_module = load_user_module(local_path) 
     
@@ -238,7 +238,7 @@ if __name__ == "__main__":
 
     estimated_time = standard_time * profile['hyperparameters']['epochs']
 
-    cursor.execute(update_query, (estimated_time, task_name, task_url))
+    cursor.execute(update_query, (estimated_time, task_url, task_name ))
     conn.commit()
 
     print(f"✅ DB에 task 업데이트 완료!")
