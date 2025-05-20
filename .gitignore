@@ -16,3 +16,4 @@ create-sample.py
 hub-operator/python-example/create-sample.py
 
 backend-secret.yaml
+scheduler-secret.yaml
