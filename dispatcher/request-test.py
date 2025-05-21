@@ -4,12 +4,11 @@ import uuid
 
 
 def make_task():
-    task_id = f"mltask-{uuid.uuid4().hex[:6]}"
+    task_name = f"mltask-{uuid.uuid4().hex[:6]}"
     task = {
         "cluster": "default",
-        "task": task_id,
-        "task_url": "https://test.site"
-    }
+        "task": task_name
+        }
     return task
 
 for i in range(5):
