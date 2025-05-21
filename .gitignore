@@ -7,7 +7,6 @@ venv/
 # 파이썬 캐시 무시
 __pycache__/
 *.pyc
-mysql-secret.yaml
 .env
 node_modules/
 uploads/
@@ -15,6 +14,5 @@ minio-test.ipynb
 create-sample.py
 hub-operator/python-example/create-sample.py
 exporter/test/
-
-backend-secret.yaml
-scheduler-secret.yaml
+manifest/secret/
+manifest/configmap/
