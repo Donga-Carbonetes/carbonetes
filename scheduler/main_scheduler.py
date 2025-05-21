@@ -22,6 +22,8 @@ logging.basicConfig(
     ]
 )
 
+#########################################################################
+
 # 큐에서 뽑아 데이터 처리
 def process_queue():
     while True:
@@ -30,7 +32,15 @@ def process_queue():
             task_name = task.get('task_name')
             estimated_time = task.get('estimated_time', 0)
             process_task(task_name, estimated_time)
-            url = 'http://localhost:5000/users'  # Flask 서버 주소 및 라우트
+            
+            # Dispatcher 에 값 전달
+            logging.basicConfig(
+                level=logging.INFO,
+                format='%(asctime)s [%(levelname)s] %(message)s',
+                handlers=[logging.StreamHandler()]
+            )
+
+            url = 'http://localhost:5000/new-task'
             data = {
                 'cluster': 'k3s-2',
                 'task': 'mltask-dd390921e2eb47e28ceeeae405e6bae5'
@@ -38,23 +48,26 @@ def process_queue():
 
             try:
                 response = requests.post(url, json=data)
-                print('Status Code:', response.status_code)
-                print('Response:', response.json())
+                logging.info(f'Status Code: {response.status_code}')
+                logging.info(f'Response Body: {response.json()}')
             except requests.exceptions.RequestException as e:
-                print('Request failed:', e)
-            # Dispatcher 에 값 전달
+                logging.error(f'Request failed: {e}')
+
+                data_queue.task_done()
+            except Exception as e:
+                logging.error(f"[Thread Error] 큐 처리 중 오류 발생: {e}")
+        except:
+            logging.error("Error")
 
 
-            data_queue.task_done()
-        except Exception as e:
-            logging.error(f"[Thread Error] 큐 처리 중 오류 발생: {e}")
+#########################################################################
 
 # 작업 처리 스레드 시작
 worker = Thread(target=process_queue, daemon=True)
 worker.start()
 
 # Enqueue End Point
-@app.route('/schedule/enqueue', methods=['POST'])
+@app.route('/schedule', methods=['POST'])
 def enqueue():
     if not request.is_json:
         logging.warning("enqueue 요청이 JSON이 아님")
