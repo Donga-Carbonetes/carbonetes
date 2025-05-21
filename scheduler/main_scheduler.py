@@ -4,6 +4,7 @@ from threading import Thread
 import time
 import logging
 import sys
+import requests
 
 from task_processor import process_task
 
@@ -29,6 +30,21 @@ def process_queue():
             task_name = task.get('task_name')
             estimated_time = task.get('estimated_time', 0)
             process_task(task_name, estimated_time)
+            url = 'http://localhost:5000/users'  # Flask 서버 주소 및 라우트
+            data = {
+                'cluster': 'k3s-2',
+                'task': 'mltask-dd390921e2eb47e28ceeeae405e6bae5'
+            }
+
+            try:
+                response = requests.post(url, json=data)
+                print('Status Code:', response.status_code)
+                print('Response:', response.json())
+            except requests.exceptions.RequestException as e:
+                print('Request failed:', e)
+            # Dispatcher 에 값 전달
+
+
             data_queue.task_done()
         except Exception as e:
             logging.error(f"[Thread Error] 큐 처리 중 오류 발생: {e}")
