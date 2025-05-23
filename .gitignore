@@ -16,3 +16,4 @@ hub-operator/python-example/create-sample.py
 exporter/test/
 manifest/secret/
 manifest/configmap/
+dispatcher/request-test.py
