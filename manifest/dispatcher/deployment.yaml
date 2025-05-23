@@ -26,6 +26,8 @@ spec:
               mountPath: /app/configs/k3s-2
               readOnly: true
           env:
+            - name: PYTHONUNBUFFERED
+              value: "1"
             - name: MYSQL_HOST
               valueFrom:
                 configMapKeyRef:

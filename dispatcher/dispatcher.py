@@ -39,7 +39,7 @@ def deploy_to_cluster(cluster_name, task_name ):
     context = get_kubeconfig_context(cluster_name)
     config_path = f"/app/configs/{cluster_name}/config"
     config.load_kube_config(config_file=config_path)
-    
+    print(f"config_path: {config_path}")
     # Job 생성
     batch = client.BatchV1Api()
     job_manifest = generate_job_manifest(task_name)
@@ -99,11 +99,11 @@ def new_task():
     
     task = request.json
     mlTask = MLTask(task['cluster'], task['task_name'])
-
+    mlTask.print()
     # 클러스터에 배포 및 DB 업데이트
     deploy_to_cluster(mlTask.cluster, mlTask.task_name)
     return {"status": "success", "message": f"{mlTask.task_name}작업이 생성되었습니다."}, 200
    
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    app.run(debug=True, host="0.0.0.0", port=5000)
