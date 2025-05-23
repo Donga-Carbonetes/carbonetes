@@ -2,8 +2,8 @@ import requests
 from datetime import datetime
 from typing import Dict
 
-AUTH_TOKEN = "bRwUO9wXGxniNLWxCfcz"
-ZONE = "KR"
+AUTH_TOKEN = ""
+ZONE = ""
 
 def fetch_latest_carbon_intensity(zone: str = ZONE, token: str = AUTH_TOKEN) -> Dict:
     url = f"https://api.electricitymap.org/v3/carbon-intensity/latest?zone={zone}"
