@@ -77,14 +77,14 @@ def generate_job_manifest(task_name):
                             "image": "twkji/run-main",
                             "command": ["python", "run-main.py"],
                             "env": [
-                                {"name": "MYSQL_HOST", "valueFrom": os.getenv("MYSQL_HOST")},
-                                {"name": "MYSQL_PORT", "valueFrom": os.getenv("MYSQL_PORT")},
+                                {"name": "MYSQL_HOST", "value": os.getenv("MYSQL_HOST")},
+                                {"name": "MYSQL_PORT", "value": os.getenv("MYSQL_PORT")},
                                 {"name": "MYSQL_USER", "value": "root"},
-                                {"name": "MYSQL_PASSWORD", "valueFrom": os.getenv("MYSQL_PASSWORD")},
+                                {"name": "MYSQL_PASSWORD", "value": os.getenv("MYSQL_PASSWORD")},
                                 {"name": "MYSQL_DATABASE", "value": "carbonetes"},
                                 {"name": "TASK_NAME", "value": task_name},
-                                {"name": "MINIO_HOST", "valueFrom": os.getenv("MINIO_HOST")},
-                                {"name": "MINIO_PORT", "valueFrom": os.getenv("MINIO_PORT")}
+                                {"name": "MINIO_HOST", "value": os.getenv("MINIO_HOST")},
+                                {"name": "MINIO_PORT", "value": os.getenv("MINIO_PORT")}
                             ]
                         }
                     ],
