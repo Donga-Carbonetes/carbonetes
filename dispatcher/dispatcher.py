@@ -37,7 +37,8 @@ def get_kubeconfig_context(cluster_name):
 def deploy_to_cluster(cluster_name, task_name ):
     # 클러스터 설정
     context = get_kubeconfig_context(cluster_name)
-    config.load_kube_config(config_file="/app/configs/config",context=context)
+    config_path = f"/app/configs/{cluster_name}/config"
+    config.load_kube_config(config_file=config_path)
     
     # Job 생성
     batch = client.BatchV1Api()
