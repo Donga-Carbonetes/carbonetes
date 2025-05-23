@@ -2,8 +2,8 @@ import requests
 from datetime import datetime
 
 # 사용자 입력
-AUTH_TOKEN = "bRwUO9wXGxniNLWxCfcz"  # 안전하게는 환경변수로
-ZONE = "KR"
+AUTH_TOKEN = ""  # 안전하게는 환경변수로
+ZONE = ""
 DURATION_MINUTES = 90  # 소요 시간: 90분 예시
 
 def fetch_latest_carbon_intensity(zone: str, token: str) -> dict:
