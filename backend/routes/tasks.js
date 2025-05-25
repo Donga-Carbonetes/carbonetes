@@ -8,6 +8,7 @@ const Task = require("../models/task");
 const k8s = require('@kubernetes/client-node');
 const fs = require("fs");
 const dayjs = require("dayjs");
+const { getIO } = require("../socket");
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -83,7 +84,11 @@ router.post("/", upload.fields([
       sampleDataName: req.files?.sampleData?.[0]?.originalname || null,
       status: "ready",
     });
-
+    // ✅ 소켓으로 상태 알림 전송
+    getIO().emit("taskStatusUpdate", {
+      id: taskId,
+      status: "ready"
+    });
     // ✅ MLTask 생성
     await createMLTask(
       taskName,

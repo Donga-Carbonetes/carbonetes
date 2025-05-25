@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import "./TaskMonitor.css";
+import { io } from "socket.io-client";
 
 function TaskMonitor() {
   const [tasks, setTasks] = useState([]);
@@ -34,6 +35,18 @@ function TaskMonitor() {
   
     fetchTasks();
     const interval = setInterval(fetchTasks, 3000);
+    const socket = io("http://localhost:4000");
+    socket.on("taskStatusUpdate", (data) => {
+      console.log("📡 실시간 상태 업데이트:", data);
+    
+      setTasks((prevTasks) =>
+        prevTasks.map((task) =>
+          task.id === data.id
+            ? { ...task, status: data.status }
+            : task
+        )
+      );
+    });
     return () => clearInterval(interval);
   }, []);
   

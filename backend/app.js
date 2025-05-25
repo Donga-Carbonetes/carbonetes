@@ -24,6 +24,11 @@ app.get("/api/tasks", async (req, res) => {
   res.json({ tasks }); 
 })
 
+// 소켓 적용: http 서버로 감싸기
+const http = require("http");
+const socket = require("./socket");
+const server = http.createServer(app);
+socket.init(server);
 
 // POST 요청: 태스크 등록
 app.post(
@@ -66,7 +71,7 @@ app.post(
 
 // 서버 실행
 const PORT = 4000
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`✅ Server listening on http://localhost:${PORT}`)
   console.log("hellow world");
 })
