@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: carbon-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: carbon-frontend
+  template:
+    metadata:
+      labels:
+        app: carbon-frontend
+    spec:
+      containers:
+        - name: carbon-frontend
+          image: twkji/carbon-front
+          ports:
+            - containerPort: 3000
+          env:
+           - name: BACKEND_HOST
+             valueFrom:
+              secretKeyRef:
+               name: backend-secret
+               key: BACKEND_HOST
+           - name: BACKEND_PORT
+             valueFrom:
+               secretKeyRef:
+                 name: backend-secret
+                 key: BACKEND_PORT

@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mltask-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mltask-operator
+  template:
+    metadata:
+      labels:
+        app: mltask-operator
+    spec:
+      serviceAccountName: mltask-operator
+      containers:
+        - name: operator
+          image: twkji/hub-operator
+          env:
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: mysql-password

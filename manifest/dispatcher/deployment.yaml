@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dispatcher
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dispatcher
+  template:
+    metadata:
+      labels:
+        app: dispatcher
+    spec:
+      containers:
+        - name: dispatcher
+          image: twkji/dispatcher
+          ports:
+            - containerPort: 5000
+          volumeMounts:
+            - name: kubeconfig-k3s-1
+              mountPath: /app/configs/k3s-1
+              readOnly: true
+            - name: kubeconfig-k3s-2
+              mountPath: /app/configs/k3s-2
+              readOnly: true
+          env:
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            - name: MYSQL_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: mysql-cm
+                  key: MYSQL_HOST
+            - name: MYSQL_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: mysql-cm
+                  key: MYSQL_PORT
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: mysql-password
+            - name: MINIO_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: minio-cm
+                  key: MINIO_HOST
+            - name: MINIO_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: minio-cm
+                  key: MINIO_PORT
+      volumes:
+        - name: kubeconfig-k3s-1
+          configMap:
+            name: kubeconfig-k3s-1
+        - name: kubeconfig-k3s-2
+          configMap:
+            name: kubeconfig-k3s-2

@@ -3,7 +3,7 @@ import os
 from kubernetes import client, config
 from datetime import datetime, timezone
 
-config.load_kube_config()
+config.load_incluster_config()
 
 @kopf.on.create('ml.carbonetes.io', 'v1', 'mltasks')
 def handle_mltask(body, spec, meta, namespace, logger, patch, **kwargs):
@@ -96,6 +96,20 @@ def generate_job_manifest(name):
                                 {"name": "MINIO_PORT", "value": "9000"},
                                 {"name": "MINIO_USER", "value": "rootuser"},
                                 {"name": "MINIO_PASSWORD", "value": "rootpass123"},
+                                {"name": "SCHEDULER_HOST", 
+                                 "valueFrom": {
+                                     "secretKeyRef": {
+                                         "name": "scheduler-secret",
+                                         "key": "SCHEDULER_HOST"
+                                     }
+                                 }},
+                                {"name": "SCHEDULER_PORT", 
+                                 "valueFrom": {
+                                     "secretKeyRef": {
+                                         "name": "scheduler-secret",
+                                         "key": "SCHEDULER_PORT"
+                                     }
+                                 }},
 
                             ]
                         }
