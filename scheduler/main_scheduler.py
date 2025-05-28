@@ -12,7 +12,7 @@ app = Flask(__name__)
 data_queue = Queue()
 
 # -----------------------
-# 🔧 Logging 설정
+#  Logging 설정
 # -----------------------
 logging.basicConfig(
     level=logging.INFO,
