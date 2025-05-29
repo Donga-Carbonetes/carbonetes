@@ -3,6 +3,7 @@ import logging
 import time
 import os
 import math
+import time
 from carbon_collector.carbon_fetch_model import get_carbon_info
 from resource_collector.new_collector import get_resource_usage
 from dotenv import load_dotenv
@@ -10,6 +11,28 @@ load_dotenv()
 
 kluster_nodes = ["K3S1", "K3S2"] # Slave Node 
 kluster_region = ["KR", "DE"] # Nodes Location K3S1: KR , K3S2: DE
+
+class Node:
+    def __init__(self, name):
+        self.name = name
+        self.assigned_time = 0  # 남은 작업 시간 (초)
+        self.last_updated = time.time()
+
+    def update_remaining_time(self):
+        now = time.time()
+        elapsed = now - self.last_updated
+        self.assigned_time = max(0, self.assigned_time - elapsed)
+        self.last_updated = now
+
+    def assign_task(self, task_duration):
+        self.update_remaining_time()
+        self.assigned_time += task_duration
+        print(f"✅ 작업 {task_duration}s 배정됨 → 노드 {self.name}, 남은 시간: {self.assigned_time:.2f}s")
+
+    def get_remaining_time(self):
+        self.update_remaining_time()
+        return self.assigned_time
+
 
 # 패널티 조정치 
 a_w = 1
