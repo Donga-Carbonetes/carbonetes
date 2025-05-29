@@ -5,6 +5,9 @@ import time
 import logging
 import sys
 import requests
+import os
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from task_processor import process_task
 
@@ -31,7 +34,7 @@ def process_queue():
             task = data_queue.get()
             task_name = task.get('task_name')
             estimated_time = task.get('estimated_time', 0)
-            process_task(task_name, estimated_time)
+            cluster = process_task(task_name, estimated_time)
             
             # Dispatcher 에 값 전달
             logging.basicConfig(
@@ -41,9 +44,14 @@ def process_queue():
             )
 
             url = 'http://localhost:5000/new-task'
+
+            if cluster == None: 
+                logging.error(f'Schdule Failed: 배치 클러스터 : {cluster}')
+            else: 
+                logging.info(f'Success Schduling: 배치 클러스터 :{cluster} TaskID : {task_name}')
             data = {
-                'cluster': 'k3s-2',
-                'task': 'mltask-dd390921e2eb47e28ceeeae405e6bae5'
+                'cluster': cluster,
+                'task': task_name
             }
 
             try:
