@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: carbon-monitoring
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: carbon-monitoring
+  template:
+    metadata:
+      labels:
+        app: carbon-monitoring
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: /metrics
+        prometheus.io/port: "8800"
+    spec:
+      containers:
+        - name: carbon-monitoring
+          image: twkji/carbon-monitoring
+          ports:
+            - containerPort: 8800
+          env:
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            - name: MYSQL_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: mysql-cm
+                  key: MYSQL_HOST
+            - name: MYSQL_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: mysql-cm
+                  key: MYSQL_PORT
+            - name: MYSQL_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: mysql-cm
+                  key: MYSQL_USER
+            - name: MYSQL_DATABASE
+              valueFrom:
+                configMapKeyRef:
+                  name: mysql-cm
+                  key: MYSQL_DATABASE
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: mysql-password
+

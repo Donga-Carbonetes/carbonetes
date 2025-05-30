@@ -16,9 +16,8 @@ db_config = {
     "database": os.getenv("MYSQL_DATABASE")
 }
 
-CARBON_INTENSITY = float(os.getenv("CARBON_INTENSITY", "450")) # 나중에 api로 받아오기
-EXPORTER_PORT = int(os.getenv("EXPORTER_PORT", "8000"))
-INTERVAL_SEC = 30
+PORT = 8800
+INTERVAL_SEC = 60
 TARGET_PORT = 9100  
 
 
@@ -60,8 +59,8 @@ def collect_metrics(clusters):
 
 
 if __name__ == "__main__":
-    print(f"탄소 Exporter 시작: 포트 {EXPORTER_PORT} 에서 Prometheus에 메트릭 노출 중")
-    start_http_server(EXPORTER_PORT)
+    print(f"탄소 Exporter 시작: 포트 {PORT} 에서 Prometheus에 메트릭 노출 중")
+    start_http_server(PORT)
 
     clusters = get_cluster_info()
     print(f"수집 대상 클러스터 목록: {[name for name, *_ in clusters]}")
