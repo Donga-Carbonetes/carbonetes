@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: carbon-monitoring
+  namespace: default
+  labels:
+    app: carbon-monitoring
+spec:
+  selector:
+    app: carbon-monitoring
+  ports:
+    - name: http
+      port: 8800
+      targetPort: 8800
