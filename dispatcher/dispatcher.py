@@ -39,7 +39,7 @@ def deploy_to_cluster(cluster_name, task_name ):
     context = get_kubeconfig_context(cluster_name)
     config_path = f"/app/configs/{cluster_name}/config"
     config.load_kube_config(config_file=config_path)
-    print(f"config_path: {config_path}")
+    # print(f"config_path: {config_path}")
     # Job 생성
     batch = client.BatchV1Api()
     job_manifest = generate_job_manifest(task_name)

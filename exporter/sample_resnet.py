@@ -76,8 +76,8 @@ device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
 # 학습 및 평가 블록
 if __name__ == "__main__":
-    cifar10_train = dataset.CIFAR10(root="./", train=True, transform=transform.ToTensor(), download=False)
-    cifar10_test = dataset.CIFAR10(root="./", train=False, transform=transform.ToTensor(), download=False)
+    cifar10_train = dataset.CIFAR10(root="./", train=True, transform=transform.ToTensor(), download=True)
+    cifar10_test = dataset.CIFAR10(root="./", train=False, transform=transform.ToTensor(), download=True)
     data_loader = DataLoader(dataset=cifar10_train, batch_size=batch_size, shuffle=True, drop_last=True)
 
     network = network.to(device)
