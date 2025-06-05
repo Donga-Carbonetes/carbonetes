@@ -185,16 +185,6 @@ function SubmitForm({ addTask }) {
             </div>
           )}
         </div>
-
-        <div className="form-section">
-          <h2>샘플 데이터 업로드</h2>
-          <input
-            ref={sampleDataRef}
-            type="file"
-            accept=".txt,.json,.csv,.jpg,.jpeg,.png"
-            onChange={(e) => setSampleData(e.target.files?.[0] || null)}
-          />
-        </div>
         <div className="form-group">
           <label htmlFor="dataShape">데이터 쉐입</label>
           <input
