@@ -64,12 +64,13 @@ d_w = 1
 
 
 def process_task(task_name, estimated_time):
-    result_score = []
-    nodes_rsc_list = []
-    nodes_crb_list = []
+    
     logging.info(f"처리 시작 - 작업 이름: {task_name}, 예상 시간: {estimated_time}초")
     try:
         while True:
+            result_score = []
+            nodes_rsc_list = []
+            nodes_crb_list = []
             # 정보 추출 항
             for node, region in zip(kluster_nodes, kluster_region):
                 # 엔드포인트 선
@@ -88,7 +89,7 @@ def process_task(task_name, estimated_time):
                         break
                 
 
-                nodes_rsc_list.append((cpu+ram)/2)  # 일단 CPU, RAM 백분율 평균 사용 
+                nodes_rsc_list.append(cpu)  # 일단 CPU, RAM 백분율 평균 사용 
                 # 탄소집약도 추출
                 carbon_info = get_carbon_info(estimated_time, country_code=region)
                 carbon_value = carbon_info.get("integratedEmission", 0)
@@ -110,8 +111,8 @@ def process_task(task_name, estimated_time):
 
 
 
-                # 리소스 사용률 제한 85% 이상 시 미배치 
-                if nodes_rsc_list[idx] > 85 :
+                # 리소스 사용률 제한 70% 이상 시 미배치 
+                if nodes_rsc_list[idx] > 60 :
                     with open(csv_file, mode='a', newline='', encoding='utf-8') as file:
                         writer = csv.writer(file)
                         writer.writerow([
@@ -169,23 +170,28 @@ def process_task(task_name, estimated_time):
 
             
             logging.info(result_score)
-            result_idx = min(range(len(result_score)), key=lambda i: sum(result_score))
+            result_idx = min(range(len(result_score)), key=lambda i: result_score[i])
             logging.info(f"처리 완료 - 작업 이름: {task_name}")
 
-
-            # Return
             # 노드 이름과 점수를 dict로 매핑
             score_dict = {kluster_name[i]: result_score[i] for i in range(len(kluster_name))}
 
-            # 점수가 999999인 노드 제거
+            # 점수가 999999인 노드 제거 (미배치)
             score_dict = {k: v for k, v in score_dict.items() if v != 999999}
 
-            # 남은 노드 중 하나를 무작위로 선택
+            # 결과 반환 로직
             if score_dict:
-                return random.choice(list(score_dict.keys()))
+                best_node = kluster_name[result_idx]
+                if best_node in score_dict:
+                    return best_node  # result_idx 기준 정상 노드 반환
+                else:
+                    # result_idx 노드가 미배치된 경우, 남은 노드 중 최소 점수 선택
+                    fallback_node = min(score_dict, key=score_dict.get)
+                    logging.warning(f"최적 노드가 미배치 상태로 대체 노드 사용: {fallback_node}")
+                    return fallback_node
             else:
-                logging.warning("모든 노드가 미배치 상태입니다.")
+                logging.warning("⚠ 모든 노드가 미배치 상태입니다. 5초 대기 후 재시도")
                 time.sleep(5)
-        
+                    
     except Exception as e:
         logging.error(f"작업 처리 중 오류 발생 - 작업 이름: {task_name}, 에러: {e}")
