@@ -31,6 +31,8 @@ def get_kubeconfig_context(cluster_name):
         return "k3s-1"
     elif cluster_name == "k3s-2":
         return "k3s-2"
+    elif cluster_name == "new-k3s-1":
+        return "new-k3s-1"
     else:
         raise ValueError("지원하지 않는 클러스터입니다.")
 
