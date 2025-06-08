@@ -17,7 +17,7 @@ db_config = {
 }
 
 PORT = 8800
-INTERVAL_SEC = 60
+INTERVAL_SEC = 10
 TARGET_PORT = 9100  
 
 
