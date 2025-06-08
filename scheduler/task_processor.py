@@ -1,25 +1,21 @@
-# task_processor.py
 import logging
 import time
 import os
 import math
-import time
 import csv
 from datetime import datetime, timedelta
-
-# For Test 
+from dotenv import load_dotenv
 import random
 
 from carbon_collector.carbon_fetch_model import get_carbon_info
 from resource_collector.new_collector import get_resource_usage
-from dotenv import load_dotenv
+
 load_dotenv()
 
-kluster_nodes = ["K3S1", "K3S2", "NEWK3S1"] # Slave Node 
-kluster_region = ["KR", "JP", "FR"] # Nodes Location K3S1: KR , K3S2: FR
+kluster_nodes = ["K3S1", "K3S2", "NEWK3S1"]
+kluster_region = ["KR", "JP", "FR"]
 kluster_name = ["k3s-1", "k3s-2", "new-k3s-1"]
- 
-# 로그 CSV 파일 초기화 (최초 실행 시 헤더 작성)
+
 csv_file = "task_log.csv"
 if not os.path.exists(csv_file):
     with open(csv_file, mode='w', newline='', encoding='utf-8') as file:
@@ -33,7 +29,7 @@ if not os.path.exists(csv_file):
 class Node:
     def __init__(self, name):
         self.name = name
-        self.expected_finish_at = None  # 작업 종료 시각
+        self.expected_finish_at = None
 
     def get_remaining_time(self):
         if self.expected_finish_at is None:
@@ -41,157 +37,90 @@ class Node:
         remaining = (self.expected_finish_at - datetime.now()).total_seconds()
         return max(0, remaining)
 
-    def assign_task(self, task_duration):  # 초 단위
+    def assign_task(self, task_duration):
         now = datetime.now()
         remaining = self.get_remaining_time()
         self.expected_finish_at = now + timedelta(seconds=remaining + task_duration)
-        print(f"✅ 작업 {task_duration}s 배정됨 → 노드 {self.name}, 종료 예정: {self.expected_finish_at}")
-
-
+        print(f"✅ {self.name} - 종료 예정: {self.expected_finish_at}")
 
 nodes = {name: Node(name) for name in kluster_nodes}
 
-def get_max_remaining_time():
-    max_node = max(nodes.values(), key=lambda n: n.get_remaining_time())
-    return max_node.name, max_node.get_remaining_time()
-
-
-# 패널티 조정치 
-a_w = 1
-b_w = 1
-c_w = 1
-d_w = 1
-
+a_w, b_w, c_w, d_w = 1, 1, 1, 1
 
 def process_task(task_name, estimated_time):
-    
     logging.info(f"처리 시작 - 작업 이름: {task_name}, 예상 시간: {estimated_time}초")
     try:
         while True:
             result_score = []
             nodes_rsc_list = []
             nodes_crb_list = []
-            # 정보 추출 항
+            remaining_times = []
+
             for node, region in zip(kluster_nodes, kluster_region):
-                # 엔드포인트 선
-                endpoint = f"{node}_NODE_EXPORTERS"
-                endpoint = os.getenv(endpoint)
-                # 리소스 추출
+                endpoint = os.getenv(f"{node}_NODE_EXPORTERS")
                 cpu, ram = get_resource_usage(endpoint)
-                count_tmp = 0
-                while True:
-                    if cpu < 0 or ram < 0: # 음수 결과 반환 시 재시도 
-                        cpu, ram = get_resource_usage(endpoint)
-                        count_tmp = count_tmp + 1
-                    elif count_tmp == 4:
-                        break
-                    else:
-                        break
-                
-
-                nodes_rsc_list.append(cpu)  # 일단 CPU, RAM 백분율 평균 사용 
-                # 탄소집약도 추출
+                retry = 0
+                while (cpu < 0 or ram < 0) and retry < 3:
+                    cpu, ram = get_resource_usage(endpoint)
+                    retry += 1
+                nodes_rsc_list.append(cpu)
                 carbon_info = get_carbon_info(estimated_time, country_code=region)
-                carbon_value = carbon_info.get("integratedEmission", 0)
-                nodes_crb_list.append(carbon_value)
+                nodes_crb_list.append(carbon_info.get("integratedEmission", 0))
+                remaining_times.append(nodes[node].get_remaining_time())
 
-            for idx in range(len(kluster_nodes)):
+            for idx, node in enumerate(kluster_nodes):
+                usage = nodes_rsc_list[idx]
 
-                # 실행 중인 노드 수 계산 항
-                # 노드 리소스 리스트 복사
-                temp = nodes_rsc_list[:]  # 또는 list(nodes_rsc_list)
-
-                # 현재 작업이 배치된다고 가정하고 해당 노드 리소스 값을 50%로 임의 설정
-                temp[idx] = 50  
-
-                # 8.5 이상 사용중인 노드로 표기 
-                count = sum(1 for n in temp if n >= 8.5)
-                work_nodes = a_w * count
-                logging.info(f"노드 수 (가용 노드 수): {work_nodes}")
-
-
-
-                # 리소스 사용률 제한 70% 이상 시 미배치 
-                if nodes_rsc_list[idx] > 60 :
+                if usage > 60:
                     with open(csv_file, mode='a', newline='', encoding='utf-8') as file:
                         writer = csv.writer(file)
                         writer.writerow([
-                            time.strftime("%Y-%m-%d %H:%M:%S"),  # timestamp
-                            task_name,                           # 작업 이름
-                            kluster_nodes[idx],                  # 노드 이름
-                            round(nodes_rsc_list[idx], 2),       # 평균 리소스 사용률
-                            "-",                                 # active_node_count
-                            "-",                                 # penalty
-                            "-",                                 # workspan
-                            "-",                                 # carbon
-                            "미배치 (리소스 초과)"               # score
-                            ])
-
-                    result_score.append(999999)  # MAX_INT = 999999
+                            time.strftime("%Y-%m-%d %H:%M:%S"), task_name, node,
+                            round(usage, 2), "-", "-", "-", "-", "미배치 (리소스 초과)"
+                        ])
+                    result_score.append(999999)
                     continue
-                
-                # 지수 패널티 항 
-                normalized = nodes_rsc_list[idx] / 100.0  # 0 ~ 1
 
-                penalty = b_w * (10 ** (4 * normalized))  # 10^0 ~ 10^4 ⇒ 1 ~ 10000
-                logging.info(f"패널티 : {penalty}")
+                temp_usage = nodes_rsc_list[:]
+                temp_usage[idx] = 50
+                count = sum(1 for u in temp_usage if u >= 8.5)
+                work_nodes = a_w * count
 
-                # 전체 실행 시간 (현재 노드 기준 예상 소요 시간)
-                remaining = nodes[kluster_nodes[idx]].get_remaining_time()
-                workspan = remaining + estimated_time
-                workspan = c_w * workspan
-                logging.info(f"실행 시간 : {workspan}")
-
-                workspan = c_w * workspan
-                logging.info(f"실행 시간 : {workspan}")
-
-                # 시간 기반 탄소 배출량 최소화 항 
+                normalized = usage / 100
+                penalty = b_w * (10 ** (4 * normalized))
+                remaining = remaining_times[idx]
+                workspan = c_w * (remaining + estimated_time)
                 carbon = d_w * nodes_crb_list[idx]
-                logging.info(f"탄소 배출량 : {carbon}")
 
+                score = work_nodes + penalty + workspan + carbon
+                result_score.append(score)
 
-                # 다목적 함수의 최소 값 
-                result_score.append(work_nodes + penalty + workspan + carbon)
-
-                # CSV 로그 저장
                 with open(csv_file, mode='a', newline='', encoding='utf-8') as file:
                     writer = csv.writer(file)
                     writer.writerow([
-                        time.strftime("%Y-%m-%d %H:%M:%S"),  # timestamp
-                        task_name,                           # 작업 이름
-                        kluster_nodes[idx],                  # 노드 이름
-                        round(nodes_rsc_list[idx], 2),       # 평균 리소스 사용률
-                        work_nodes,                          # 활성 노드 수
-                        round(penalty, 2),                   # 패널티
-                        round(workspan, 2),                  # 예상 실행 시간
-                        round(carbon, 6),                    # 탄소 배출량
-                        round(work_nodes + penalty + workspan + carbon, 2)                      # 총 점수
+                        time.strftime("%Y-%m-%d %H:%M:%S"), task_name, node,
+                        round(usage, 2), work_nodes, round(penalty, 2),
+                        round(workspan, 2), round(carbon, 6), round(score, 2)
                     ])
 
-            
-            logging.info(result_score)
+            logging.info(f"스코어 목록: {result_score}")
             result_idx = min(range(len(result_score)), key=lambda i: result_score[i])
-            logging.info(f"처리 완료 - 작업 이름: {task_name}")
+            best_node = kluster_nodes[result_idx]
 
-            # 노드 이름과 점수를 dict로 매핑
-            score_dict = {kluster_name[i]: result_score[i] for i in range(len(kluster_name))}
+            valid_score = {kluster_nodes[i]: s for i, s in enumerate(result_score) if s != 999999}
 
-            # 점수가 999999인 노드 제거 (미배치)
-            score_dict = {k: v for k, v in score_dict.items() if v != 999999}
-
-            # 결과 반환 로직
-            if score_dict:
-                best_node = kluster_name[result_idx]
-                if best_node in score_dict:
-                    return best_node  # result_idx 기준 정상 노드 반환
+            if valid_score:
+                if best_node in valid_score:
+                    nodes[best_node].assign_task(estimated_time)
+                    return kluster_name[result_idx]
                 else:
-                    # result_idx 노드가 미배치된 경우, 남은 노드 중 최소 점수 선택
-                    fallback_node = min(score_dict, key=score_dict.get)
-                    logging.warning(f"최적 노드가 미배치 상태로 대체 노드 사용: {fallback_node}")
-                    return fallback_node
+                    fallback_node = min(valid_score, key=valid_score.get)
+                    nodes[fallback_node].assign_task(estimated_time)
+                    logging.warning(f"⚠ 대체 노드 사용: {fallback_node}")
+                    return kluster_name[kluster_nodes.index(fallback_node)]
             else:
-                logging.warning("⚠ 모든 노드가 미배치 상태입니다. 5초 대기 후 재시도")
+                logging.warning("⚠ 모든 노드가 미배치 상태입니다. 5초 후 재시도")
                 time.sleep(5)
-                    
+
     except Exception as e:
-        logging.error(f"작업 처리 중 오류 발생 - 작업 이름: {task_name}, 에러: {e}")
+        logging.error(f"❌ 작업 처리 중 오류: {e}")
