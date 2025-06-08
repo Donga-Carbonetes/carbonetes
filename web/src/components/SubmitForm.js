@@ -5,6 +5,9 @@ import Modal from "./Modal"
 import "./Modal.css"
 import "./SubmitForm.css"
 
+const HOST = process.env.BACKEND_HOST
+const PORT = process.env.BACKEND_PORT
+
 function SubmitForm({ addTask }) {
   const [taskName, setTaskName] = useState("")
   const [codeInputType, setCodeInputType] = useState("text")
@@ -58,7 +61,7 @@ function SubmitForm({ addTask }) {
         formData.append("codeFile", codeFile)
       }
 
-      const response = await fetch("http://localhost:4000/api/tasks", {
+      const response = await fetch(`http://${HOST}:${PORT}:4000/api/tasks`, {
         method: "POST",
         body: formData,
       })

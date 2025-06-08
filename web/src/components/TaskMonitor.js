@@ -4,6 +4,9 @@ import { useState, useEffect } from "react";
 import "./TaskMonitor.css";
 import { io } from "socket.io-client";
 
+const HOST = process.env.BACKEND_HOST
+const PORT = process.env.BACKEND_PORT
+
 function TaskMonitor() {
   const [tasks, setTasks] = useState([]);
   const [activeTab, setActiveTab] = useState("all");
@@ -11,7 +14,7 @@ function TaskMonitor() {
 
   useEffect(() => {
     const fetchTasks = () => {
-      fetch("http://localhost:4000/api/tasks")
+      fetch(`http://${HOST}:${PORT}/api/tasks`)
       .then((res) => res.json())
       .then((data) => {
         const mappedTasks = data.tasks.map(task => ({
@@ -35,7 +38,7 @@ function TaskMonitor() {
   
     fetchTasks();
     const interval = setInterval(fetchTasks, 3000);
-    const socket = io("http://localhost:4000");
+    const socket = io(`http://${HOST}:${PORT}`);
     socket.on("taskStatusUpdate", (data) => {
       console.log("📡 실시간 상태 업데이트:", data);
     
