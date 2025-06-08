@@ -5,8 +5,8 @@ import Modal from "./Modal"
 import "./Modal.css"
 import "./SubmitForm.css"
 
-const HOST = process.env.BACKEND_HOST
-const PORT = process.env.BACKEND_PORT
+const HOST = process.env.REACT_APP_BACKEND_HOST
+const PORT = process.env.REACT_APP_BACKEND_PORT
 
 function SubmitForm({ addTask }) {
   const [taskName, setTaskName] = useState("")

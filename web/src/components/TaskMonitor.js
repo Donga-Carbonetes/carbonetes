@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import "./TaskMonitor.css";
 import { io } from "socket.io-client";
 
-const HOST = process.env.BACKEND_HOST
-const PORT = process.env.BACKEND_PORT
+const HOST = process.env.REACT_APP_BACKEND_HOST
+const PORT = process.env.REACT_APP_BACKEND_PORT
 
 function TaskMonitor() {
   const [tasks, setTasks] = useState([]);

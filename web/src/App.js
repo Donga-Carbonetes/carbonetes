@@ -5,8 +5,8 @@ import SubmitForm from "./components/SubmitForm"
 import TaskMonitor from "./components/TaskMonitor"
 import "./App.css"
 // const API_URL = "http://localhost:4000/api/tasks"; // 백엔드 주소
-const HOST = process.env.BACKEND_HOST
-const PORT = process.env.BACKEND_PORT
+const HOST = process.env.REACT_APP_BACKEND_HOST
+const PORT = process.env.REACT_APP_BACKEND_PORT
 const API_URL = `http://${HOST}:${PORT}/api/tasks`; // 백엔드 주소
 
 function App() {

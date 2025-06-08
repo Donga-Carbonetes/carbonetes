@@ -18,12 +18,12 @@ spec:
           ports:
             - containerPort: 3000
           env:
-           - name: BACKEND_HOST
+           - name: REACT_APP_BACKEND_HOST
              valueFrom:
               secretKeyRef:
                name: backend-secret
                key: BACKEND_HOST
-           - name: BACKEND_PORT
+           - name: REACT_APP_BACKEND_PORT
              valueFrom:
                secretKeyRef:
                  name: backend-secret
