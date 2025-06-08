@@ -1,6 +1,8 @@
 "use client"
 
 import { useState, useRef } from "react"
+import Modal from "./Modal"
+import "./Modal.css"
 import "./SubmitForm.css"
 
 function SubmitForm({ addTask }) {
@@ -8,15 +10,13 @@ function SubmitForm({ addTask }) {
   const [codeInputType, setCodeInputType] = useState("text")
   const [codeText, setCodeText] = useState("")
   const [codeFile, setCodeFile] = useState(null)
-  const [sampleData, setSampleData] = useState(null)
   const [datasetSize, setDatasetSize] = useState("")
   const [targetLabels, setTargetLabels] = useState("")
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [validationError, setValidationError] = useState(null)
-  const [submitSuccess, setSubmitSuccess] = useState(false)
   const [dataShape, setDataShape] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [modalMessage, setModalMessage] = useState("")
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const codeFileRef = useRef(null)
-  const sampleDataRef = useRef(null)
 
   const validateCodeText = (code) => {
     const requiredVariables = [
@@ -29,72 +29,34 @@ function SubmitForm({ addTask }) {
     ]
     const missingVariables = requiredVariables.filter((v) => !code.includes(v))
     if (missingVariables.length > 0) {
-      setValidationError(`다음 변수가 코드에 없습니다: ${missingVariables.join(", ")}`)
-      return false
+      throw new Error(`다음 변수가 코드에 없습니다: ${missingVariables.join(", ")}`)
     }
-    return true
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setIsSubmitting(true)
-    setSubmitSuccess(false)
 
     try {
-      if (!taskName.trim()) {
-        setValidationError("태스크 이름을 입력해주세요.")
-        setIsSubmitting(false)
-        return
-      }
-
-      if (codeInputType === "text" && !codeText.trim()) {
-        setValidationError("코드를 입력해주세요.")
-        setIsSubmitting(false)
-        return
-      }
-
-      if (codeInputType === "file" && !codeFile) {
-        setValidationError("코드 파일을 업로드해주세요.")
-        setIsSubmitting(false)
-        return
-      }
-
-      if (!sampleData) {
-        setValidationError("샘플 데이터를 업로드해주세요.")
-        setIsSubmitting(false)
-        return
-      }
-
-      if (!datasetSize) {
-        setValidationError("데이터셋 크기를 입력해주세요.")
-        setIsSubmitting(false)
-        return
-      }
-
-      if (!targetLabels) {
-        setValidationError("타겟 레이블 개수를 입력해주세요.")
-        setIsSubmitting(false)
-        return
-      }
-
-      if (codeInputType === "text" && !validateCodeText(codeText)) {
-        setIsSubmitting(false)
-        return
-      }
+      if (!taskName.trim()) throw new Error("태스크 이름을 입력해주세요.")
+      if (codeInputType === "text" && !codeText.trim()) throw new Error("코드를 입력해주세요.")
+      if (codeInputType === "file" && !codeFile) throw new Error("코드 파일을 업로드해주세요.")
+      if (!datasetSize) throw new Error("데이터셋 크기를 입력해주세요.")
+      if (!targetLabels) throw new Error("타겟 레이블 개수를 입력해주세요.")
+      if (codeInputType === "text") validateCodeText(codeText)
 
       const formData = new FormData()
       formData.append("taskname_user", taskName)
-      formData.append("dataset_size", datasetSize);
-      formData.append("label_count", targetLabels);
+      formData.append("dataset_size", datasetSize)
+      formData.append("label_count", targetLabels)
       formData.append("codeType", codeInputType)
       formData.append("data_shape", dataShape)
+
       if (codeInputType === "text") {
         formData.append("codeText", codeText)
       } else {
         formData.append("codeFile", codeFile)
       }
-
-      formData.append("sampleData", sampleData)
 
       const response = await fetch("http://localhost:4000/api/tasks", {
         method: "POST",
@@ -103,20 +65,22 @@ function SubmitForm({ addTask }) {
 
       const data = await response.json()
       addTask(data.newTask)
-      setSubmitSuccess(true)
+
+      setModalMessage("✅ 태스크가 성공적으로 제출되었습니다.")
+      setIsModalOpen(true)
 
       // Reset
       setTaskName("")
       setCodeText("")
       setCodeFile(null)
-      setSampleData(null)
       setDatasetSize("")
       setTargetLabels("")
+      setDataShape("")
       if (codeFileRef.current) codeFileRef.current.value = ""
-      if (sampleDataRef.current) sampleDataRef.current.value = ""
     } catch (err) {
       console.error(err)
-      setValidationError("태스크 제출 중 오류가 발생했습니다.")
+      setModalMessage(`❌ ${err.message || "태스크 제출 중 오류가 발생했습니다."}`)
+      setIsModalOpen(true)
     } finally {
       setIsSubmitting(false)
     }
@@ -164,7 +128,7 @@ function SubmitForm({ addTask }) {
               <label htmlFor="codeText">코드 텍스트</label>
               <textarea
                 id="codeText"
-                placeholder="딥러닝 코드를 여기에 붙여넣으세요..."
+                placeholder="딥러닝 코드를 입력하세요"
                 className="code-textarea"
                 value={codeText}
                 onChange={(e) => setCodeText(e.target.value)}
@@ -185,6 +149,7 @@ function SubmitForm({ addTask }) {
             </div>
           )}
         </div>
+
         <div className="form-group">
           <label htmlFor="dataShape">데이터 쉐입</label>
           <input
@@ -196,6 +161,7 @@ function SubmitForm({ addTask }) {
           />
           <p className="form-hint">쉼표로 구분된 숫자를 입력하세요 (예: 3,32,32)</p>
         </div>
+
         <div className="form-section">
           <h2>데이터셋 정보</h2>
           <div className="form-group">
@@ -221,13 +187,14 @@ function SubmitForm({ addTask }) {
           </div>
         </div>
 
-        {validationError && <p className="error">{validationError}</p>}
-        {submitSuccess && <p className="success">태스크가 성공적으로 제출되었습니다.</p>}
-
-        <button type="submit" disabled={isSubmitting}>
+        <button type="submit" className="submit-button" disabled={isSubmitting}>
           {isSubmitting ? "제출 중..." : "태스크 제출"}
         </button>
       </form>
+
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+        <p>{modalMessage}</p>
+      </Modal>
     </div>
   )
 }
