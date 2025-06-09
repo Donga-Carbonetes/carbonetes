@@ -3,6 +3,7 @@ from kubernetes.client import configuration
 from flask import Flask, request, jsonify
 import os
 import mysql.connector
+from datetime import datetime
 
 db_config = {
     "host": os.getenv("MYSQL_HOST"),
@@ -53,10 +54,10 @@ def deploy_to_cluster(cluster_name, task_name ):
     cursor = conn.cursor()
     query = """
         UPDATE task_info
-        SET status = 'running'
+        SET status = 'running', cluster_name = %s, dispatched_at = %s
         WHERE task_name = %s
     """
-    cursor.execute(query, (task_name,))
+    cursor.execute(query, (cluster_name, datetime.now().strftime('%Y-%m-%d %H:%M:%S'),task_name,))
     cursor.close()
     conn.commit()
 
