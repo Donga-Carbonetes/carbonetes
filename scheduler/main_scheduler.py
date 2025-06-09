@@ -56,7 +56,7 @@ def process_queue():
                 logging.info(f'Success Schduling: 배치 클러스터 :{cluster} TaskID : {task_name}')
             data = {
                 'cluster': cluster,
-                'task': task_name
+                'task_name': task_name
             }
 
             try:
