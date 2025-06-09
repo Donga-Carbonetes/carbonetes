@@ -6,6 +6,7 @@ import logging
 import sys
 import requests
 import os
+import datetime
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -35,6 +36,10 @@ def process_queue():
             task_name = task.get('task_name')
             estimated_time = task.get('estimated_time', 0)
             cluster = process_task(task_name, estimated_time)
+
+            timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            with open('cluster_log.txt', 'a', encoding='utf-8') as f:
+                f.write(f"[{timestamp}] {task_name} -> {cluster}\n")
             
             # Dispatcher 에 값 전달
             logging.basicConfig(
