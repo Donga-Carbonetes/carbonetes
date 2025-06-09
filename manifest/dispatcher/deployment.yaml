@@ -13,6 +13,7 @@ spec:
       labels:
         app: dispatcher
     spec:
+      serviceAccount: "mltask-updater"
       containers:
         - name: dispatcher
           image: twkji/dispatcher

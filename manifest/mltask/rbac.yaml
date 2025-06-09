@@ -12,7 +12,7 @@ metadata:
 rules:
 - apiGroups: ["ml.carbonetes.io"]
   resources: ["mltasks", "mltasks/status"]
-  verbs: ["get", "patch", "update"]
+  verbs: ["*"]
 - apiGroups: [""]
   resources: ["pods"]
   verbs: ["get", "list"]
