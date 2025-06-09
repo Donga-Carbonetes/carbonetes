@@ -1,6 +1,7 @@
 import logging
 import time
 import os
+import sys
 import math
 import csv
 from datetime import datetime, timedelta
@@ -49,6 +50,7 @@ a_w, b_w, c_w, d_w = 1, 1, 1, 1
 
 def process_task(task_name, estimated_time):
     logging.info(f"처리 시작 - 작업 이름: {task_name}, 예상 시간: {estimated_time}초")
+
     try:
         while True:
             result_score = []
