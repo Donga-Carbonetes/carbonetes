@@ -88,29 +88,57 @@ def update_k8s_mltask_status_terminated(name, namespace):
     update_k8s_mltask_status(name, namespace, "terminated")
 
 def fetch_terminated_mltasks():
-    conn = None
     result = []
     try:
+        # 1. 클러스터에서 mltask 목록 조회
+        config.load_incluster_config()
+        cr_api = client.CustomObjectsApi()
+        group = "ml.carbonetes.io"
+        version = "v1"
+        namespace = "default"
+        plural = "mltasks"
+
+        cr_list = cr_api.list_namespaced_custom_object(
+            group=group,
+            version=version,
+            namespace=namespace,
+            plural=plural
+        )
+
+        cluster_task_names = [item["metadata"]["name"] for item in cr_list.get("items", [])]
+
+        if not cluster_task_names:
+            return []
+
+        # 2. DB에서 terminated 상태인 task 조회 (클러스터에 존재하는 것만)
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor(dictionary=True)
 
-        six_minutes_ago = (datetime.utcnow() - timedelta(minutes=6)).strftime('%Y-%m-%d %H:%M:%S')
-        now = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
-
-        query = """
-        SELECT task_name FROM task_info
-        WHERE status = 'terminated'
-        AND completed_at BETWEEN %s AND %s
+        format_strings = ','.join(['%s'] * len(cluster_task_names))
+        query = f"""
+            SELECT task_name
+            FROM task_info
+            WHERE status = 'terminated'
+            AND task_name IN ({format_strings})
         """
-        cursor.execute(query, (six_minutes_ago, now))
-        result = cursor.fetchall()
+
+        cursor.execute(query, tuple(cluster_task_names))
+        db_results = cursor.fetchall()
         cursor.close()
+        conn.close()
+
+        # 3. 결과 정리
+        for row in db_results:
+            result.append({
+                "task_name": row["task_name"],
+                "namespace": namespace
+            })
+
     except Exception as e:
-        print(f"❌ MySQL 조회 실패: {e}")
-    finally:
-        if conn:
-            conn.close()
+        print(f"❌ mltask 조회 실패: {e}")
+
     return result
+
 
 def delete_k8s_mltask(name, namespace):
     api = get_cr_api_incluster()
