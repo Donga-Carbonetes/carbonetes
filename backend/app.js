@@ -1,7 +1,7 @@
 process.env.NODE_EXTRA_CA_CERTS = "/root/k3s-ca.crt";
 const express = require("express")
 const multer = require("multer")
-const Task = require("./models/task")
+const Task = require("./models/Task")
 const taskRoutes = require("./routes/tasks");
 const app = express()
 const upload = multer({ storage: multer.memoryStorage() })
