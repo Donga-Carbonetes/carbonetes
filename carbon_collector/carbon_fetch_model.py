@@ -2,6 +2,7 @@ import os
 import requests
 from typing import Dict
 from dotenv import load_dotenv
+import mysql.connector
 
 # .env 파일 로딩
 load_dotenv()
@@ -15,10 +16,33 @@ def get_zone_and_token(country_code: str) -> tuple[str, str]:
     zone = os.getenv(f"{country_code}_ZONE")
     token = os.getenv(f"{country_code}_API_TOKEN")
 
-    if not zone or not token:
-        raise ValueError(f"{country_code}에 대한 ZONE 또는 API_TOKEN 환경변수가 설정되지 않았습니다.")
+    conn = mysql.connector.connect(
+        host=os.getenv("MYSQL_HOST"),
+        user="root",
+        password=os.getenv("MYSQL_PASSWORD"),
+        database="carbonetes"
+    )
+    try:
+        cursor = conn.cursor()
+        query = """
+        SELECT region, token
+        FROM cluster
+        WHERE region = %s
+        """
+        cursor.execute(query, (country_code,))
+        result = cursor.fetchone()
+
+        if not result:
+            raise ValueError(f"{country_code}에 해당하는 클러스터 정보를 찾을 수 없습니다.")
+
+        region, token = result
+        return region, token
+
+    finally:
+        cursor.close()
+        conn.close()
+
     
-    return zone, token
 
 def fetch_latest_carbon_intensity(zone: str, token: str) -> Dict:
     url = f"https://api.electricitymap.org/v3/carbon-intensity/latest?zone={zone}"

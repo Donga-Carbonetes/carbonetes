@@ -16,7 +16,7 @@ db_config = {
     "database": "carbonetes"
 }
 
-PORT = 8800
+PORT = 8801
 INTERVAL_SEC = 10
 TARGET_PORT = 9100  
 

@@ -2,6 +2,7 @@ import kopf
 import os
 from kubernetes import client, config
 from datetime import datetime, timezone
+import asyncio
 
 config.load_incluster_config()
 
@@ -62,6 +63,52 @@ def delete_mltask(body, spec, meta, namespace, logger, **kwargs):
 
     except client.exceptions.ApiException as e:
         logger.error(f"[MLTask] 삭제 중 오류 발생: {e}")
+
+# @kopf.on.field('ml.carbonetes.io', 'v1', 'mltasks', field='status.phase')
+# async def on_terminated_phase(old, new, meta, namespace, logger, **kwargs):
+#     name = meta['name']
+#     if new == "terminated":
+#         logger.info(f"[MLTask] {name}가 terminated 상태입니다. 5분 뒤 ConfigMap 및 mltask 리소스 삭제 예약됨.")
+#         await asyncio.sleep(300)  # 5분 대기
+
+#         # CoreV1Api 인스턴스
+#         core = client.CoreV1Api()
+#         # CustomObjectsApi 인스턴스
+#         custom = client.CustomObjectsApi()
+
+#         cm_name = f"{name}-script"
+
+#         # ConfigMap 삭제
+#         try:
+#             core.delete_namespaced_config_map(
+#                 name=cm_name,
+#                 namespace=namespace,
+#                 body=client.V1DeleteOptions()
+#             )
+#             logger.info(f"[MLTask] ConfigMap {cm_name} 삭제 완료.")
+#         except client.exceptions.ApiException as e:
+#             if e.status != 404:
+#                 logger.error(f"[MLTask] ConfigMap 삭제 중 오류: {e}")
+#             else:
+#                 logger.warning(f"[MLTask] ConfigMap {cm_name} 이미 없음 (404)")
+
+#         # mltask 리소스 자체 삭제
+#         try:
+#             custom.delete_namespaced_custom_object(
+#                 group="ml.carbonetes.io",
+#                 version="v1",
+#                 namespace=namespace,
+#                 plural="mltasks",
+#                 name=name,
+#                 body=client.V1DeleteOptions()
+#             )
+#             logger.info(f"[MLTask] Custom Resource {name} 삭제 완료.")
+#         except client.exceptions.ApiException as e:
+#             if e.status != 404:
+#                 logger.error(f"[MLTask] Custom Resource 삭제 중 오류: {e}")
+#             else:
+#                 logger.warning(f"[MLTask] Custom Resource {name} 이미 없음 (404)")
+
 
 
 def generate_job_manifest(name):
