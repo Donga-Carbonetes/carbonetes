@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from dotenv import load_dotenv
 import random
 import mysql.connector
+import json
 from carbon_collector.carbon_fetch_model import get_carbon_info
 from resource_collector.new_collector import get_resource_usage
 
@@ -18,6 +19,17 @@ db_config = {
     "password": os.getenv("MYSQL_PASSWORD"),
     "database": "carbonetes"
 }
+
+# 정규화 기준값
+ACTIVE_NODE_MIN, ACTIVE_NODE_MAX = 1.0, 3.0
+PENALTY_MIN, PENALTY_MAX = 1.0, 246.15
+WORKSPAN_MIN, WORKSPAN_MAX = 1.0, 486.43
+CARBON_MIN, CARBON_MAX = 0.4, 3524.4
+
+
+def normalize(x, min_val, max_val):
+    return (x - min_val) / (max_val - min_val + 1e-9)  # 안정성 확보용 epsilon
+
 
 load_dotenv()
 
@@ -36,6 +48,13 @@ if not os.path.exists(csv_file):
             "carbon_emission", "score"
         ])
 
+
+def load_weights():
+    with open("weights.json", "r") as f:
+        weights = json.load(f)
+    return weights["a_w"], weights["b_w"], weights["c_w"], weights["d_w"]
+
+
 class Node:
     def __init__(self, cluster_name, cluster_ip, region):
         self.cluster_name = cluster_name
@@ -52,8 +71,10 @@ class Node:
     def assign_task(self, task_duration):
         now = datetime.now()
         remaining = self.get_remaining_time()
-        self.expected_finish_at = now + timedelta(seconds=remaining + task_duration)
+        self.expected_finish_at = now + \
+            timedelta(seconds=remaining + task_duration)
         print(f"✅ {self.cluster_name} - 종료 예정: {self.expected_finish_at}")
+
 
 def get_cluster_info_from_db():
     conn = None
@@ -61,7 +82,7 @@ def get_cluster_info_from_db():
     clusters_data = []
     try:
         conn = mysql.connector.connect(**db_config)
-        cursor = conn.cursor(dictionary=True) # 결과를 딕셔너리 형태로 반환
+        cursor = conn.cursor(dictionary=True)  # 결과를 딕셔너리 형태로 반환
         query = "SELECT cluster_name, cluster_ip, region FROM cluster"
         cursor.execute(query)
         clusters_data = cursor.fetchall()
@@ -74,16 +95,22 @@ def get_cluster_info_from_db():
             conn.close()
     return clusters_data
 
-clusters_from_db = get_cluster_info_from_db()
-nodes = {c['cluster_name']: Node(c['cluster_name'], c['cluster_ip'], c['region']) for c in clusters_from_db}
 
-a_w, b_w, c_w, d_w = 1, 1, 1, 1
+clusters_from_db = get_cluster_info_from_db()
+nodes = {c['cluster_name']: Node(
+    c['cluster_name'], c['cluster_ip'], c['region']) for c in clusters_from_db}
+
+# a_w, b_w, c_w, d_w = 1, 1, 1, 1
+
+a_w, b_w, c_w, d_w = load_weights()
+
 
 def process_task(task_name, estimated_time):
     logging.info(f"처리 시작 - 작업 이름: {task_name}, 예상 시간: {estimated_time}초")
 
     if not nodes:
-        logging.error("초기화된 클러스터 노드가 없습니다. 데이터베이스에서 클러스터 정보를 가져오지 못했거나 클러스터가 정의되지 않았습니다.")
+        logging.error(
+            "초기화된 클러스터 노드가 없습니다. 데이터베이스에서 클러스터 정보를 가져오지 못했거나 클러스터가 정의되지 않았습니다.")
         return None
 
     try:
@@ -99,7 +126,8 @@ def process_task(task_name, estimated_time):
                     cpu, ram = get_resource_usage(f'{endpoint}:9100')
                     retry += 1
                 usage = cpu
-                carbon_info = get_carbon_info(estimated_time, country_code=node_obj.region)
+                carbon_info = get_carbon_info(
+                    estimated_time, country_code=node_obj.region)
                 carbon_emission = carbon_info.get("integratedEmission", 0)
                 remaining = node_obj.get_remaining_time()
 
@@ -120,40 +148,60 @@ def process_task(task_name, estimated_time):
                     with open(csv_file, mode='a', newline='', encoding='utf-8') as file:
                         writer = csv.writer(file)
                         writer.writerow([
-                            time.strftime("%Y-%m-%d %H:%M:%S"), task_name, node_obj.cluster_name,
+                            time.strftime(
+                                "%Y-%m-%d %H:%M:%S"), task_name, node_obj.cluster_name,
                             round(usage, 2), "-", "-", "-", "-", "미배치 (리소스 초과)"
                         ])
                     result_score.append(999999)
                     continue
 
+                # 가상 시나리오로 클러스터 분산도 계산
                 temp_usage = [d["usage"] for d in processed_nodes_data]
-                temp_usage[idx] = 50
+                temp_usage[idx] = 50  # 이 노드에 작업 할당 시 사용률 가정
                 count = sum(1 for u in temp_usage if u >= 8.5)
-                work_nodes = a_w * count
 
-                normalized = usage / 100
-                penalty = b_w * (10 ** (4 * normalized))
-                workspan = c_w * (remaining + estimated_time)
-                carbon_score_term = d_w * carbon
+                # 원래 값들
+                raw_work_nodes = count
+                raw_penalty = 10 ** (4 * (usage / 100))
+                raw_workspan = remaining + estimated_time
+                raw_carbon = carbon
 
-                score = work_nodes + penalty + workspan + carbon_score_term
+                # 정규화된 값들
+                norm_work_nodes = normalize(
+                    raw_work_nodes, ACTIVE_NODE_MIN, ACTIVE_NODE_MAX)
+                norm_penalty = normalize(raw_penalty, PENALTY_MIN, PENALTY_MAX)
+                norm_workspan = normalize(
+                    raw_workspan, WORKSPAN_MIN, WORKSPAN_MAX)
+                norm_carbon = normalize(raw_carbon, CARBON_MIN, CARBON_MAX)
+
+                # 정규화된 값으로 점수 계산
+                score = (
+                    a_w * norm_work_nodes +
+                    b_w * norm_penalty +
+                    c_w * norm_workspan +
+                    d_w * norm_carbon
+                )
                 result_score.append(score)
 
                 with open(csv_file, mode='a', newline='', encoding='utf-8') as file:
                     writer = csv.writer(file)
                     writer.writerow([
-                        time.strftime("%Y-%m-%d %H:%M:%S"), task_name, node_obj.cluster_name,
-                        round(usage, 2), work_nodes, round(penalty, 2),
-                        round(workspan, 2), round(carbon, 6), round(score, 2)
+                        time.strftime(
+                            "%Y-%m-%d %H:%M:%S"), task_name, node_obj.cluster_name,
+                        round(usage, 2), raw_work_nodes, round(raw_penalty, 2),
+                        round(raw_workspan, 2), round(
+                            raw_carbon, 6), round(score, 4)
                     ])
 
             logging.info(f"스코어 목록: {result_score}")
-            result_idx = min(range(len(result_score)), key=lambda i: result_score[i])
+            result_idx = min(range(len(result_score)),
+                             key=lambda i: result_score[i])
 
             best_node_obj = processed_nodes_data[result_idx]["node_obj"]
             best_node_name = best_node_obj.cluster_name
 
-            valid_score = {processed_nodes_data[i]["node_obj"].cluster_name: s for i, s in enumerate(result_score) if s != 999999}
+            valid_score = {processed_nodes_data[i]["node_obj"].cluster_name: s for i, s in enumerate(
+                result_score) if s != 999999}
 
             if valid_score:
                 if best_node_name in valid_score:
