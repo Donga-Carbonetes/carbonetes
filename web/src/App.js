@@ -7,7 +7,8 @@ import "./App.css"
 // const API_URL = "http://localhost:4000/api/tasks"; // 백엔드 주소
 const HOST = process.env.REACT_APP_BACKEND_HOST
 const PORT = process.env.REACT_APP_BACKEND_PORT
-const API_URL = `http://${HOST}:${PORT}/api/tasks`; // 백엔드 주소
+const API_URL = "http://carbon-backend:4000/api/tasks"
+
 
 function App() {
   const [activeTab, setActiveTab] = useState("submit")

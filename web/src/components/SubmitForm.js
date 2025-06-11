@@ -7,6 +7,7 @@ import "./SubmitForm.css"
 
 const HOST = process.env.REACT_APP_BACKEND_HOST
 const PORT = process.env.REACT_APP_BACKEND_PORT
+const API_URL = "http://carbon-backend:4000/api/tasks"
 
 function SubmitForm({ addTask }) {
   const [taskName, setTaskName] = useState("")
@@ -61,7 +62,7 @@ function SubmitForm({ addTask }) {
         formData.append("codeFile", codeFile)
       }
 
-      const response = await fetch(`http://${HOST}:${PORT}:4000/api/tasks`, {
+      const response = await fetch(API_URL, {
         method: "POST",
         body: formData,
       })

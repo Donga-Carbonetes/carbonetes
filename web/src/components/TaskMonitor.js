@@ -6,7 +6,7 @@ import { io } from "socket.io-client";
 
 const HOST = process.env.REACT_APP_BACKEND_HOST
 const PORT = process.env.REACT_APP_BACKEND_PORT
-
+const API_URL = "http://carbon-backend:4000/api/tasks";
 function TaskMonitor() {
   const [tasks, setTasks] = useState([]);
   const [activeTab, setActiveTab] = useState("all");
@@ -14,7 +14,7 @@ function TaskMonitor() {
 
   useEffect(() => {
     const fetchTasks = () => {
-      fetch(`http://${HOST}:${PORT}/api/tasks`)
+      fetch(API_URL)
       .then((res) => res.json())
       .then((data) => {
         const mappedTasks = data.tasks.map(task => ({
@@ -38,7 +38,7 @@ function TaskMonitor() {
   
     fetchTasks();
     const interval = setInterval(fetchTasks, 3000);
-    const socket = io(`http://${HOST}:${PORT}`);
+    const socket = io("http://carbon-backend:4000");
     socket.on("taskStatusUpdate", (data) => {
       console.log("📡 실시간 상태 업데이트:", data);
     
