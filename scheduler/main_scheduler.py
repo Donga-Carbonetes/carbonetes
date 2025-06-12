@@ -69,8 +69,8 @@ def process_queue():
                 data_queue.task_done()
             except Exception as e:
                 logging.error(f"[Thread Error] 큐 처리 중 오류 발생: {e}")
-        except:
-            logging.error("Error")
+        except Exception as e:
+            logging.error(e)
 
 
 #########################################################################
