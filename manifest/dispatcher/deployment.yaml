@@ -28,7 +28,10 @@ spec:
               readOnly: true
             - name: kubeconfig-new-k3s-1
               mountPath: /app/configs/new-k3s-1
-              readOnly: true              
+              readOnly: true
+            - name: kubeconfig-k3s-6
+              mountPath: /app/configs/k3s-6
+              readOnly: true                    
           env:
             - name: PYTHONUNBUFFERED
               value: "1"
@@ -66,4 +69,7 @@ spec:
             name: kubeconfig-k3s-2
         - name: kubeconfig-new-k3s-1
           configMap:
-            name: kubeconfig-new-k3s-1         
+            name: kubeconfig-new-k3s-1
+        - name: kubeconfig-k3s-6
+          configMap:
+            name: kubeconfig-k3s-6
