@@ -68,7 +68,8 @@ def load_weights():
             cursor.close()
         if conn:
             conn.close()
-    return weights[0], weights[1], weights[2], weights[3]
+    weight = weights[0]
+    return (weight['a_w'], weight['b_w'], weight['c_w'], weight['d_w'])
 
 
 class Node:
@@ -118,11 +119,12 @@ nodes = {c['cluster_name']: Node(
 
 # a_w, b_w, c_w, d_w = 1, 1, 1, 1
 
-a_w, b_w, c_w, d_w = load_weights()
+
 
 
 def process_task(task_name, estimated_time):
-    logging.info(f"처리 시작 - 작업 이름: {task_name}, 예상 시간: {estimated_time}초")
+    (a_w, b_w, c_w, d_w) = load_weights()
+    logging.info(f"처리 시작 - 작업 이름: {task_name}, 예상 시간: {estimated_time}초, {a_w}, {b_w}, {c_w}, {d_w}")
 
     if not nodes:
         logging.error(
