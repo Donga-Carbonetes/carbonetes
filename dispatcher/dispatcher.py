@@ -203,6 +203,7 @@ def generate_job_manifest(task_name):
                             "image": "twkji/run-main",
                             "command": ["python", "run-main.py"],
                             "env": [
+                                {"name": "TZ", "value": "Asia/Seoul"},
                                 {"name": "MYSQL_HOST", "value": os.getenv("MYSQL_HOST")},
                                 {"name": "MYSQL_PORT", "value": os.getenv("MYSQL_PORT")},
                                 {"name": "MYSQL_USER", "value": "root"},
