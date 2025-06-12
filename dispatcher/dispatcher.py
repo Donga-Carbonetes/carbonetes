@@ -163,6 +163,7 @@ def loop_terminated_updater():
     while True:
         try:
             tasks = fetch_terminated_mltasks()
+            print(tasks)
             if tasks:
                 for task in tasks:
                     try:
