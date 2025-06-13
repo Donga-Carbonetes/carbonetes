@@ -19,3 +19,4 @@ manifest/configmap/
 dispatcher/request-test.py
 code_sample/
 scheduler/weight
+scheduler/logs
