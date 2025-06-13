@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: carbon-frontend
-          image: twkji/carbon-front
+          image: rzlozi/carbon-front
           ports:
             - containerPort: 3000
           env:
