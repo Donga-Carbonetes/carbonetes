@@ -204,11 +204,15 @@ def process_task(task_name, estimated_time):
                 with open(csv_file, mode='a', newline='', encoding='utf-8') as file:
                     writer = csv.writer(file)
                     writer.writerow([
-                        time.strftime(
-                            "%Y-%m-%d %H:%M:%S"), task_name, node_obj.cluster_name,
-                        round(usage, 2), raw_work_nodes, round(raw_penalty, 2),
-                        round(raw_workspan, 2), round(
-                            raw_carbon, 6), round(score, 4)
+                        time.strftime("%Y-%m-%d %H:%M:%S"),
+                        task_name,
+                        node_obj.cluster_name,
+                        round(usage, 2),
+                        round(norm_work_nodes, 4),
+                        round(norm_penalty, 4),
+                        round(norm_workspan, 4),
+                        round(norm_carbon, 6),
+                        round(score, 4)
                     ])
 
             logging.info(f"스코어 목록: {result_score}")
