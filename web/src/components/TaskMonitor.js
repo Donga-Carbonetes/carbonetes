@@ -19,7 +19,7 @@ function TaskMonitor() {
       .then((data) => {
         const mappedTasks = data.tasks.map(task => ({
           id: task.id,
-          name: task.taskname_user,  
+          name: task.taskname_user || task.task_name, 
           datasetSize: task.dataset_size,
           targetLabels: task.label_count,
           status: (task.status || "ready") === "ready" ? "waiting" : task.status,
@@ -38,7 +38,7 @@ function TaskMonitor() {
   
     fetchTasks();
     const interval = setInterval(fetchTasks, 3000);
-    const socket = io("http://carbon-backend:4000");
+    const socket = io("http://211.253.31.134:31840"); 
     socket.on("taskStatusUpdate", (data) => {
       console.log("📡 실시간 상태 업데이트:", data);
     
