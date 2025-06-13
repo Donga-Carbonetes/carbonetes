@@ -183,7 +183,7 @@ def process_task(task_name, estimated_time):
                 score = (
                     a_w * norm_work_nodes +
                     b_w * norm_penalty +
-                    c_w * norm_workspan +
+                    c_w * norm_workspan
                 )
                 result_score.append(score)
 
