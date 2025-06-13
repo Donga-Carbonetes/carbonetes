@@ -1,13 +1,8 @@
 from resource_collector.new_collector import get_resource_usage
-from carbon_collector.carbon_fetch_model import get_carbon_info
-import json
 import mysql.connector
-import random
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 import csv
-import math
-import sys
 import os
 import time
 import logging
@@ -39,14 +34,13 @@ load_dotenv()
 # kluster_name = ["k3s-1", "k3s-2", "new-k3s-1"]
 # endpoint = []
 
-csv_file = "task_log.csv"
+csv_file = "task_case2_log.csv"
 if not os.path.exists(csv_file):
     with open(csv_file, mode='w', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
         writer.writerow([
             "timestamp", "task_name", "node", "resource_usage_avg",
-            "active_node_count", "penalty", "workspan",
-            "carbon_emission", "score"
+            "active_node_count", "penalty", "workspan", "score"
         ])
 
 
@@ -144,22 +138,17 @@ def process_task(task_name, estimated_time):
                     cpu, ram = get_resource_usage(f'{endpoint}:9100')
                     retry += 1
                 usage = cpu
-                carbon_info = get_carbon_info(
-                    estimated_time, country_code=node_obj.region)
-                carbon_emission = carbon_info.get("integratedEmission", 0)
                 remaining = node_obj.get_remaining_time()
 
                 processed_nodes_data.append({
                     "node_obj": node_obj,
                     "usage": usage,
-                    "carbon": carbon_emission,
                     "remaining_time": remaining
                 })
 
             for idx, data in enumerate(processed_nodes_data):
                 node_obj = data["node_obj"]
                 usage = data["usage"]
-                carbon = data["carbon"]
                 remaining = data["remaining_time"]
 
                 if usage > 60:
@@ -182,7 +171,6 @@ def process_task(task_name, estimated_time):
                 raw_work_nodes = count
                 raw_penalty = 10 ** (4 * (usage / 100))
                 raw_workspan = remaining + estimated_time
-                raw_carbon = carbon
 
                 # 정규화된 값들
                 norm_work_nodes = normalize(
@@ -190,14 +178,12 @@ def process_task(task_name, estimated_time):
                 norm_penalty = normalize(raw_penalty, PENALTY_MIN, PENALTY_MAX)
                 norm_workspan = normalize(
                     raw_workspan, WORKSPAN_MIN, WORKSPAN_MAX)
-                norm_carbon = normalize(raw_carbon, CARBON_MIN, CARBON_MAX)
 
                 # 정규화된 값으로 점수 계산
                 score = (
                     a_w * norm_work_nodes +
                     b_w * norm_penalty +
                     c_w * norm_workspan +
-                    d_w * norm_carbon
                 )
                 result_score.append(score)
 
@@ -211,7 +197,6 @@ def process_task(task_name, estimated_time):
                         round(norm_work_nodes, 4),
                         round(norm_penalty, 4),
                         round(norm_workspan, 4),
-                        round(norm_carbon, 6),
                         round(score, 4)
                     ])
 
