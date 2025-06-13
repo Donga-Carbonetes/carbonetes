@@ -225,6 +225,7 @@ if __name__ == "__main__":
         print(f"[{i+1}/10] Time = {t:.2f} sec")
         times.append(t)
 
+    times.sort()
     standard_time = times[5]
 
     task_url = upload_file_minio(local_path, task_name)
