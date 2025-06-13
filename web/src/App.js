@@ -7,7 +7,7 @@ import "./App.css"
 // const API_URL = "http://localhost:4000/api/tasks"; // 백엔드 주소
 const HOST = process.env.REACT_APP_BACKEND_HOST
 const PORT = process.env.REACT_APP_BACKEND_PORT
-const API_URL = "http://carbon-backend:4000/api/tasks"
+const API_URL = `${process.env.REACT_APP_API_URL}/api/tasks`;
 
 
 function App() {

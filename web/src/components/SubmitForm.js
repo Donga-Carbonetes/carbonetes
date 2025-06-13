@@ -7,7 +7,7 @@ import "./SubmitForm.css"
 
 const HOST = process.env.REACT_APP_BACKEND_HOST
 const PORT = process.env.REACT_APP_BACKEND_PORT
-const API_URL = "http://carbon-backend:4000/api/tasks"
+const API_URL = `${process.env.REACT_APP_API_URL}/api/tasks`;
 
 function SubmitForm({ addTask }) {
   const [taskName, setTaskName] = useState("")
