@@ -7,8 +7,7 @@ import "./SubmitForm.css"
 
 const HOST = process.env.REACT_APP_BACKEND_HOST
 const PORT = process.env.REACT_APP_BACKEND_PORT
-const API_URL = `${process.env.REACT_APP_API_URL}/api/tasks`;
-
+const API_URL = "http://211.253.31.134:4000/api/tasks"
 function SubmitForm({ addTask }) {
   const [taskName, setTaskName] = useState("")
   const [codeInputType, setCodeInputType] = useState("text")
