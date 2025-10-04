@@ -1,3 +1,9 @@
+################################################
+# Memetic Algorithm (메머틱 알고리즘) 프로젝트의 실행기(Serving Loop) 코드입니다.
+################################################
+
+
+# Import
 from resource_collector.new_collector import get_resource_usage
 from carbon_collector.carbon_fetch_model import get_carbon_info
 import json
@@ -13,6 +19,7 @@ import time
 import logging
 
 
+# DB Configuration
 db_config = {
     "host": os.getenv("MYSQL_HOST"),
     "port": int(os.getenv("MYSQL_PORT")),
