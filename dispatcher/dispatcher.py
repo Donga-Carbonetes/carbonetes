@@ -185,7 +185,7 @@ def loop_terminated_updater():
         time.sleep(300)  # 5분마다 반복
 
 
-def generate_job_manifest(task_name):
+def generate_job_manifest(task_name, sample_sec=2):
     return {
         "apiVersion": "batch/v1",
         "kind": "Job",
@@ -197,6 +197,7 @@ def generate_job_manifest(task_name):
             "ttlSecondsAfterFinished": 600,
             "template": {
                 "spec": {
+                    "serviceAccountName": "metrics-reader",
                     "containers": [
                         {
                             "name": "main",
@@ -211,11 +212,28 @@ def generate_job_manifest(task_name):
                                 {"name": "MYSQL_DATABASE", "value": "carbonetes"},
                                 {"name": "TASK_NAME", "value": task_name},
                                 {"name": "MINIO_HOST", "value": os.getenv("MINIO_HOST")},
-                                {"name": "MINIO_PORT", "value": os.getenv("MINIO_PORT")}
+                                {"name": "MINIO_PORT", "value": os.getenv("MINIO_PORT")},
+                                # === 추가된 항목들 ===
+                                {
+                                    "name": "POD_NAME",
+                                    "valueFrom": {"fieldRef": {"fieldPath": "metadata.name"}}
+                                },
+                                {
+                                    "name": "POD_NAMESPACE",
+                                    "valueFrom": {"fieldRef": {"fieldPath": "metadata.namespace"}}
+                                },
+                                {
+                                    "name": "NODE_NAME",
+                                    "valueFrom": {"fieldRef": {"fieldPath": "spec.nodeName"}}
+                                },
+                                {
+                                    "name": "METRIC_SAMPLE_SEC",
+                                    "value": 2  # 기본 2초
+                                }
                             ]
                         }
                     ],
-                    "restartPolicy": "Never",
+                    "restartPolicy": "Never"
                 }
             }
         }
