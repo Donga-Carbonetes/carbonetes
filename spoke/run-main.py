@@ -200,25 +200,22 @@ class CPUSampler:
         return int(statistics.median(self.samples_m)) if self.samples_m else None
 
 if __name__ == "__main__":
-
-    # 1) 메트릭 수집 시작
-    sampler = CPUSampler(POD_NAMESPACE, POD_NAME, interval=SAMPLE_SEC)
+    # 1) 메트릭 수집 시작 (노드/네임스페이스/파드명 순서!)
+    if not NODE_NAME:
+        print("❌ NODE_NAME env가 비어있습니다. Downward API로 주입했는지 확인하세요.")
+    sampler = CPUSampler(NODE_NAME, POD_NAMESPACE, POD_NAME, interval=SAMPLE_SEC)
     sampler.start()
 
+    # 2) 작업 실행
     download_path = download_task()
     return_code = run_task(download_path)
 
+    # 3) 수집 종료 + 중앙값 저장(간단 UPDATE)
     sampler.stop()
     median_m = sampler.median_m()
-    save_cpu_median(task_name, POD_NAME, POD_NAMESPACE,
-                    median_m, SAMPLE_SEC, len(sampler.samples_m),
-                    sampler.started_at, sampler.ended_at)
+    save_cpu_median(task_name, median_m)
 
-
+    # 4) 상태 업데이트
     if return_code == 0:
         update_task_status_and_completed_at(task_name, "terminated")
         print(f"✅ 모든 프로그램이 정상적으로 종료되었습니다 (종료 코드: {return_code})")
-
-
-
-
