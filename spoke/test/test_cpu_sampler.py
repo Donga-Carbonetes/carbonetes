@@ -169,6 +169,7 @@ class CPUSampler:
 
 
 if __name__ == "__main__":
+    print("version 1")
     node_name = os.getenv("NODE_NAME")
     namespace = os.getenv("POD_NAMESPACE", "default")
     pod_name = os.getenv("POD_NAME")
