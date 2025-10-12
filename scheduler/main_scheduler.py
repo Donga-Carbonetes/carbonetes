@@ -11,7 +11,7 @@ from datetime import datetime
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from task_processor import process_task
-from learning_loop import learning_loop
+from scheduler.learing_loop.main_learning_loop import learning_loop
 
 app = Flask(__name__)
 data_queue = Queue()
