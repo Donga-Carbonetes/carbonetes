@@ -6,8 +6,12 @@ import os
 import logging
 import random 
 import copy 
+import mysql.connector
+from mysql.connector import Error
 
 
+# Module import 
+from get_task_info import get_processed_tasks
 
 # DB Configuration
 db_config = {
@@ -18,9 +22,21 @@ db_config = {
     "database": "carbonetes"
 }
 
-def learning_loop(task_name, estimated_time):
-    logging.info('Nice~')
+
+# 함수 도입 부
+def learning_loop(task_name, estimated_time): 
+    logging.info("[학습기]학습을 시작합니다.")
     
+    # [2] 로그 수집
+    task_data = get_processed_tasks(db_config)
+
+    # [3] 초기 개체군 형성
+
+
+
+
+
+
 # [3] 초기 가중치 생성 + [6] 최적 가중치 탐색 (메모틱 알고리즘)
 # 1. 현재 운영 중인 가중치 (DB에서 읽어 오거나 수정하겠습니다. 총합이 1이되도록 그냥 제가 가정한것임)
 # ------------------------------
@@ -34,7 +50,7 @@ current_weights = {
 # ------------------------------
 # 2. 초기 세대 생성 (현재 가중치 + 랜덤)
 # ------------------------------
-def generate_initial_population(size=6): #초기 후보 가중치만듦. 총 6개정도
+def generate_initial_population(size=6): # 초기 후보 가중치만듦. 총 6개정도
     population = []
     population.append(current_weights)  # 현재 정책 포함
 
