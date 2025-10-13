@@ -1,6 +1,6 @@
 # sim.py
 from dataclasses import dataclass, field
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Dict
 from statistics import quantiles
 from datetime import datetime
 import random
@@ -28,7 +28,7 @@ class WeightVector:
 
 @dataclass
 class SimCluster:
-    # cpu_usage_input: DB/수집기에서 온 '원시값' (m 또는 %)
+    # cpu_usage_input: 외부에서 온 '원시값' (m 또는 %)
     name: str
     region: str
     cpu_usage_input: float
@@ -78,6 +78,9 @@ class SimulatorConfig:
     # avg_cpu가 없을 때 % 증가 기본치
     cpu_increment_on_assign_pct: float = 20.0
 
+    # 클러스터 스냅샷이 없을 때 사용할 기본 설정
+    default_region: str = "KR"
+    default_cluster_carbon: float = 150.0  # 작업 로그에 탄소가 전혀 없을 때 사용
     seed: Optional[int] = None
 
 # ==============================
@@ -94,8 +97,9 @@ def _cpu_penalty(usage_pct: float) -> float:
     return 10 ** (4.0 * (usage_pct / 100.0))
 
 def _active_nodes_if_assign(usages_pct: List[float], target_idx: int) -> int:
+    # 간이 모델: 해당 클러스터에 작업을 넣는다고 가정하면 +30%p 상승
     tmp = list(usages_pct)
-    tmp[target_idx] = min(100.0, tmp[target_idx] + 30.0)  # 정책 가정(+30%p)
+    tmp[target_idx] = min(100.0, tmp[target_idx] + 30.0)
     return sum(1 for u in tmp if u >= 8.5)
 
 def _m_to_percent(v_m: float, capacity_m: float) -> float:
@@ -135,6 +139,40 @@ class Simulator:
         clusters: List[SimCluster] = []
         for name, region, cpu_in, eta, carbon in clusters_spec:
             c = SimCluster(name, region, float(cpu_in), int(eta), float(carbon))
+            c.cpu_usage_pct = _normalize_cpu_input(c.cpu_usage_input, self.cfg.cluster_cpu_unit, self.cfg.capacity_m)
+            clusters.append(c)
+        return clusters
+
+    # --- NEW: 로그만으로 클러스터를 자동 생성 ---
+    def clusters_from_tasks(self, tasks: List[HistTask]) -> List[SimCluster]:
+        """
+        작업 로그의 placed_cluster를 수집하여 초기 클러스터 상태를 자동 구성.
+        - 클러스터별 carbon은 해당 클러스터에 속한 작업들의 carbon_intensity 평균(>0인 값만)으로 추정
+        - 값이 전혀 없으면 default_cluster_carbon 사용
+        - 초기 cpu/eta는 0으로 시작(필요 시 정책에 맞게 조정 가능)
+        """
+        per_cluster_values: Dict[str, List[float]] = {}
+        names: List[str] = []
+        for t in tasks:
+            name = t.placed_cluster or "default"
+            if name not in per_cluster_values:
+                per_cluster_values[name] = []
+                names.append(name)
+            if t.carbon_intensity and t.carbon_intensity > 0:
+                per_cluster_values[name].append(float(t.carbon_intensity))
+
+        clusters: List[SimCluster] = []
+        for name in names or ["default"]:
+            vals = per_cluster_values.get(name, [])
+            carbon = (sum(vals)/len(vals)) if vals else self.cfg.default_cluster_carbon
+            # 초기 cpu_in/eta는 0으로 시작
+            c = SimCluster(
+                name=name,
+                region=self.cfg.default_region,
+                cpu_usage_input=0.0,   # m or %
+                eta_sec=0,
+                carbon=carbon,
+            )
             c.cpu_usage_pct = _normalize_cpu_input(c.cpu_usage_input, self.cfg.cluster_cpu_unit, self.cfg.capacity_m)
             clusters.append(c)
         return clusters
@@ -189,11 +227,18 @@ class Simulator:
                    self.cfg.gamma*float(p95) + self.cfg.zeta*float(mean_lat))
         return SimMetrics(fitness, total_carbon, sla_miss, p95, mean_lat, assigns)
 
-    def evaluate_population(self, tasks: List[HistTask],
-                            base_clusters_spec: List[Tuple[str, str, float, int, float]],
+    # --- 변경: clusters_spec이 None이면 로그에서 자동 생성 ---
+    def evaluate_population(self,
+                            tasks: List[HistTask],
+                            base_clusters_spec: Optional[List[Tuple[str, str, float, int, float]]],
                             weights_population: List[WeightVector]):
         self.ensure_population(weights_population)
-        base = self.bootstrap_clusters(base_clusters_spec)  # 1회 객체화
+
+        if base_clusters_spec and len(base_clusters_spec) > 0:
+            base = self.bootstrap_clusters(base_clusters_spec)
+        else:
+            base = self.clusters_from_tasks(tasks)  # ★ 로그만으로 초기 클러스터 구성
+
         results = []
         for w in weights_population:
             # 각 후보는 같은 시작 상태에서 평가
