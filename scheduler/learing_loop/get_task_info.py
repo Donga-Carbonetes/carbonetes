@@ -11,7 +11,7 @@ _KEY_MAPPING = {
     'cpu_m': 'avg_cpu_usage',
     'memory': 'avg_mem_usage',
     'cluster_name': 'cluster_name',
-    'caborn_intensity': 'carbon_intensity',
+    'carbon_intensity': 'carbon_intensity',
     'completed_at': 'completion_at',
     'queue_delay': 'queue_delay'
 }
@@ -38,7 +38,7 @@ def get_processed_tasks(db_config: dict) -> list:
         query = """
         SELECT
             id, task_name, dispatched_at, estimated_time, completed_at,
-            cpu_m, memory, cluster_name, caborn_intensity,
+            cpu_m, memory, cluster_name, carbon_intensity,
             TIMESTAMPDIFF(SECOND, created_at, dispatched_at) AS queue_delay,
             TIMESTAMPDIFF(SECOND, dispatched_at, completed_at) AS actual_runtime
         FROM
