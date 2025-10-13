@@ -11,6 +11,7 @@ from datetime import datetime
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from task_processor import process_task
+from learning_loop import learning_loop
 
 app = Flask(__name__)
 data_queue = Queue()
@@ -32,10 +33,20 @@ logging.basicConfig(
 def process_queue():
     while True:
         try:
+            served_count = 0 # 학습기를 위한 카운트 
+
             task = data_queue.get()
             task_name = task.get('task_name')
             estimated_time = task.get('estimated_time', 0)
+            # 스케줄러 실행기(Serving Loop) 호출
             cluster = process_task(task_name, estimated_time)
+
+            # 스케줄러 학습기(Learning Loop) 호출 및 관리 
+            served_count += 1
+            if served_count % 10 == 0:
+                learning_loop(task_name, estimated_time)
+                logging.info(f'Learning Loop: Success')
+
 
             timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             with open('cluster.log', 'a', encoding='utf-8') as f:
