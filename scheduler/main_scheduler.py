@@ -45,7 +45,7 @@ def process_queue():
             served_count += 1
             if served_count % 10 == 0:
                 learning_loop(task_name, estimated_time)
-                logging.info(f'Learning Loop: Success')
+                logging.info(f'Learning Loop: Start Calculation')
 
 
             timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
