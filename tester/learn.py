@@ -22,7 +22,8 @@ class SimpleMLP(nn.Module):
 
 batch_size = 64
 learning_rate = 0.01
-training_epochs = random.randint(1, 10)
+training_epochs = random.randint(1, 20)
+# training_epochs = 30
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 network = SimpleMLP().to(device)
 loss_function = nn.CrossEntropyLoss()

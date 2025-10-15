@@ -190,24 +190,12 @@ def generate_job_manifest(task_name, sample_sec=2):
         "apiVersion": "batch/v1",
         "kind": "Job",
         "metadata": {
-            "name": f"{task_name}-job",
-            # 컨트롤러가 보는 라벨 (반드시 포함)
-            "labels": {
-                "mltask": "true",
-                "task-name": task_name,  # 선택: 추적 편의
-            },
+            "name": f"{task_name}-job"
         },
         "spec": {
             "backoffLimit": 3,
             "ttlSecondsAfterFinished": 600,
             "template": {
-                "metadata": {
-                    # 파드에도 동일 라벨 부여 (가시성/추적/선택에 유용)
-                    "labels": {
-                        "mltask": "true",
-                        "task-name": task_name,
-                    }
-                },
                 "spec": {
                     "serviceAccountName": "metrics-reader",
                     "containers": [
@@ -225,31 +213,30 @@ def generate_job_manifest(task_name, sample_sec=2):
                                 {"name": "TASK_NAME", "value": task_name},
                                 {"name": "MINIO_HOST", "value": os.getenv("MINIO_HOST")},
                                 {"name": "MINIO_PORT", "value": os.getenv("MINIO_PORT")},
-                                # Downward API
+                                # === 추가된 항목들 ===
                                 {
                                     "name": "POD_NAME",
-                                    "valueFrom": {"fieldRef": {"fieldPath": "metadata.name"}},
+                                    "valueFrom": {"fieldRef": {"fieldPath": "metadata.name"}}
                                 },
                                 {
                                     "name": "POD_NAMESPACE",
-                                    "valueFrom": {"fieldRef": {"fieldPath": "metadata.namespace"}},
+                                    "valueFrom": {"fieldRef": {"fieldPath": "metadata.namespace"}}
                                 },
                                 {
                                     "name": "NODE_NAME",
-                                    "valueFrom": {"fieldRef": {"fieldPath": "spec.nodeName"}},
+                                    "valueFrom": {"fieldRef": {"fieldPath": "spec.nodeName"}}
                                 },
-                                # 사용 안 하면 지워도 됨
                                 {
                                     "name": "METRIC_SAMPLE_SEC",
-                                    "value": str(sample_sec),
-                                },
-                            ],
+                                    "value": 2  # 기본 2초
+                                }
+                            ]
                         }
                     ],
-                    "restartPolicy": "Never",
-                },
-            },
-        },
+                    "restartPolicy": "Never"
+                }
+            }
+        }
     }
 
 @app.route("/new-task", methods=["POST"])

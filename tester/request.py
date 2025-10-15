@@ -63,16 +63,16 @@ def main():
     conn.close()
 
     create_mltask_from_file(
-        script_path="E:\carbonetes\exporter\simple_mlp.py",
+        script_path="/carbonetes/tester/learn.py",
         datashape=[1,28,28],
         dataset_size=60000,
         label_count=10
     )
 
 
-for i in range(20):
+for i in range(10):
     main()
-    time.sleep(40) # 2초의 시간을 두고 보내기
+    time.sleep(30) # 2초의 시간을 두고 보내기
 
 
 

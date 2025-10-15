@@ -32,6 +32,30 @@ def normalize(x, min_val, max_val):
     return (x - min_val) / (max_val - min_val + 1e-9)  # 안정성 확보용 epsilon
 
 
+def update_task_carbon_intensity(task_name, carbon_value):
+    """task_info 테이블의 carbon_intensity 필드를 업데이트"""
+    conn = None
+    cursor = None
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+        query = """
+            UPDATE task_info
+               SET carbon_intensity = %s
+             WHERE task_name = %s
+        """
+        cursor.execute(query, (carbon_value, task_name))
+        conn.commit()
+    except mysql.connector.Error as err:
+        logging.error(f"❌ 탄소 집약도 업데이트 중 오류 발생: {err}")
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+
+
 load_dotenv()
 
 # kluster_nodes = ["K3S1", "K3S2", "NEWK3S1"]
@@ -228,10 +252,14 @@ def process_task(task_name, estimated_time):
             if valid_score:
                 if best_node_name in valid_score:
                     nodes[best_node_name].assign_task(estimated_time)
+                    selected_carbon = processed_nodes_data[result_idx]["carbon"]
+                    update_task_carbon_intensity(task_name, selected_carbon)
                     return best_node_name
                 else:
                     fallback_node_name = min(valid_score, key=valid_score.get)
                     nodes[fallback_node_name].assign_task(estimated_time)
+                    selected_carbon = processed_nodes_data[list(valid_score.keys()).index(fallback_node_name)]["carbon"]
+                    update_task_carbon_intensity(task_name, selected_carbon)
                     logging.warning(f"⚠ 대체 노드 사용: {fallback_node_name}")
                     return fallback_node_name
             else:
