@@ -35,7 +35,7 @@ def learning_loop(task_name, estimated_time):
     task_data = get_processed_tasks(db_config)
      
     # [3] 초기 개체군 형성
-    candidates_weight = generate_candidates(n=5) # n 가중치 후보 갯수
+    candidates_weight = generate_candidates(n=5, include_current=True)# n 가중치 후보 갯수
 
     # [4] 시뮬레이션(재실행 가상화)
     sim_result = run_simulation_as_dicts_from_modules(task_data, candidates_weight)

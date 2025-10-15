@@ -64,10 +64,14 @@ def local_search(base_weight, epsilon=0.01):
 # -------------------------------------------
 # 후보 5개 생성 (변경 없음)
 # -------------------------------------------
-def generate_candidates(n=5, use_local_search=True):
+def generate_candidates(n=5, use_local_search=True, include_current=True):
     current = get_current_weight()
     print("[현재 가중치]", current)
     candidates = []
+
+    if include_current:
+        # DB의 현재 가중치 1개를 가장 첫 번째로 추가
+        candidates.append(current)
 
     for _ in range(n):
         mutated = mutate(current)
