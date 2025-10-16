@@ -63,7 +63,7 @@ def save_best_weights_to_db(best_result: dict):
     가장 좋은 가중치 조합 하나를 DB에 저장합니다.
     기존 테이블 데이터를 모두 지우고 새로운 최적의 가중치만 추가합니다.
 
-    Args:
+    Args:a
         best_result (dict): 'weights'와 'custom_fitness' 키를 포함한 딕셔너리.
     """
     if not best_result:
