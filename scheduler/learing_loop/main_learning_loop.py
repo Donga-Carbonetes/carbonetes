@@ -83,7 +83,7 @@ def save_best_weights_to_db(best_result: dict):
         print("'weights' 테이블의 기존 데이터를 삭제했습니다.")
 
         # 새로운 최적 가중치 INSERT
-        sql = "INSERT INTO weights (a_w, b_w, c_w, d_w) VALUES (%s, %s, %s, %s)"
+        sql = "UPDATE weights SET a_w = %s, b_w = %s, c_w = %s, d_w = %s"
         values = (best_weights['a'], best_weights['b'], best_weights['c'], best_weights['d'])
         cursor.execute(sql, values)
         
