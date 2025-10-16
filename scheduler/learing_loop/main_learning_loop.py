@@ -33,19 +33,28 @@ def learning_loop():
     
     # [2] 로그 수집
     task_data = get_processed_tasks(db_config)
+    logging.info(task_data)
+    logging.info("[학습기] [2] 로그 수집 완료")
      
     # [3] 초기 개체군 형성
     candidates_weight = generate_candidates(n=5, include_current=True)# n 가중치 후보 갯수
-
+    logging.info(candidates_weight)
+    logging.info("[학습기] [3] 초기 개체군 형성 완료")
+    
     # [4] 시뮬레이션(재실행 가상화)
     sim_result = run_simulation_as_dicts_from_modules(task_data, candidates_weight)
+    logging.info(sim_result)
+    logging.info("[학습기] [4] 시뮬레이션 완료")
 
     # [5] 성능지표 계산(Fitness)
     best_result = calculate_and_get_best_result(sim_result, 1.00, 0.05)
     # simulation_results, alpha, gamma, use_p95_latency=True
+    logging.info(best_result)
+    logging.info("[학습기] [5] 성능지표 계산 완료")
 
     # [7] 정책 저장
     save_best_weights_to_db(best_result)
+    logging.info("[학습기] [7] 정책 저장 완료")
     logging.info(f'Learning Loop: Success Weight Save')
 
 
@@ -77,10 +86,6 @@ def save_best_weights_to_db(best_result: dict):
         
         connection = mysql.connector.connect(**db_config)
         cursor = connection.cursor()
-
-        # 테이블을 비워서 항상 최신 값만 유지
-        cursor.execute("TRUNCATE TABLE weights")
-        print("'weights' 테이블의 기존 데이터를 삭제했습니다.")
 
         # 새로운 최적 가중치 INSERT
         sql = "UPDATE weights SET a_w = %s, b_w = %s, c_w = %s, d_w = %s"
