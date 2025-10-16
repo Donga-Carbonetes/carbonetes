@@ -44,7 +44,7 @@ def process_queue():
             # 스케줄러 학습기(Learning Loop) 호출 및 관리 
             served_count += 1
             if served_count % 10 == 0:
-                learning_loop(task_name, estimated_time)
+                learning_loop()
                 logging.info(f'Learning Loop: Start Calculation')
 
 

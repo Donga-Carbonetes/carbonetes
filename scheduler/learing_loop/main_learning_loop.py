@@ -28,7 +28,7 @@ db_config = {
 
 
 # 함수 도입 부
-def learning_loop(task_name, estimated_time): 
+def learning_loop(): 
     logging.info("[학습기]학습을 시작합니다.")
     
     # [2] 로그 수집
@@ -101,3 +101,14 @@ def save_best_weights_to_db(best_result: dict):
             cursor.close()
             connection.close()
             # print("MySQL 연결이 닫혔습니다.")
+
+
+#################################################################
+# 이 스크립트가 직접 실행될 때 learning_loop() 함수를 호출합니다.
+#################################################################
+if __name__ == "__main__":
+    # 로깅 기본 설정 (레벨, 포맷 등)
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+    
+    # 메인 학습 루프 실행
+    learning_loop()
