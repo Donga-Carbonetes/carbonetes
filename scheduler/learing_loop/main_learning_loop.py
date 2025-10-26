@@ -15,6 +15,7 @@ from get_task_info import get_processed_tasks # [2] 로그 수집
 from generate import generate_candidates      # [3] 초기 개체군 형성
 from sim_bridge import run_simulation_as_dicts_from_modules # [4] 시뮬레이션(재실행 가상화)
 from calculate_fitness import calculate_and_get_best_result
+from local_search import local_search_with_sim
 
 
 # DB Configuration
@@ -43,6 +44,9 @@ def learning_loop(task_name, estimated_time):
     # [5] 성능지표 계산(Fitness)
     best_result = calculate_and_get_best_result(sim_result, 1.00, 0.05)
     # simulation_results, alpha, gamma, use_p95_latency=True
+    
+    # [6] 지역 탐색 수행
+b   est_result = local_search_with_sim(best_result, task_data, alpha=1.0, gamma=0.05, epsilon=0.02)
 
     # [7] 정책 저장
     save_best_weights_to_db(best_result)
