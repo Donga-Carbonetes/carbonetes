@@ -1,20 +1,18 @@
 import mysql.connector
 import os
-from dotenv import load_dotenv
 import random
 import copy
 
-load_dotenv()
 
-# DB 접속 정보를 딕셔너리로 관리
 db_config = {
-    "host": os.getenv("MYSQL_HOST", "localhost"),
-    "port": int(os.getenv("MYSQL_PORT", 3306)),
+    "host": "211.253.31.134",
+    "port": "30529",
     "user": "root",
-    "password": os.getenv("MYSQL_PASSWORD", ""),
+    "password": "12341234",
     "database": "carbonetes",
     "charset": "utf8"  # 문자 인코딩 설정 추가
 }
+
 
 def connect_db():
     """
@@ -26,6 +24,8 @@ def connect_db():
 # -------------------------------------------
 # 최근 가중치 로드 (변경 없음)
 # -------------------------------------------
+
+
 def get_current_weight():
     conn = connect_db()
     # 결과를 딕셔너리 형태로 받기 위해 cursor 생성 시 dictionary=True 옵션을 사용합니다.
@@ -38,6 +38,8 @@ def get_current_weight():
 # -------------------------------------------
 # 돌연변이 (변경 없음)
 # -------------------------------------------
+
+
 def mutate(weight_dict, mutation_rate=0.05):
     return {
         k: min(1.0, max(0.0, v + random.uniform(-mutation_rate, mutation_rate)))
@@ -47,12 +49,16 @@ def mutate(weight_dict, mutation_rate=0.05):
 # -------------------------------------------
 # 교배 (변경 없음)
 # -------------------------------------------
+
+
 def crossover(parent1, parent2):
     return {k: (parent1[k] + parent2[k]) / 2.0 for k in parent1}
 
 # -------------------------------------------
 # 지역 탐색 (선택적) (변경 없음)
 # -------------------------------------------
+
+
 def local_search(base_weight, epsilon=0.01):
     best = copy.deepcopy(base_weight)
     for k in best:
@@ -64,6 +70,8 @@ def local_search(base_weight, epsilon=0.01):
 # -------------------------------------------
 # 후보 5개 생성 (변경 없음)
 # -------------------------------------------
+
+
 def generate_candidates(n=5, use_local_search=True, include_current=True):
     current = get_current_weight()
     print("[현재 가중치]", current)
@@ -80,6 +88,7 @@ def generate_candidates(n=5, use_local_search=True, include_current=True):
         candidates.append(improved)
 
     return candidates
+
 
 # -------------------------------------------
 # 메인 실행 (변경 없음)

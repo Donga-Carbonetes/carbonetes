@@ -16,21 +16,21 @@ from generate import generate_candidates      # [3] 초기 개체군 형성
 # [4] 시뮬레이션(재실행 가상화)
 from sim_bridge import run_simulation_as_dicts_from_modules
 from calculate_fitness import calculate_and_get_best_result
-from local_search import local_search_with_sim
+from local_search_with_sim import local_search_with_sim
 
 
 # DB Configuration
 db_config = {
-    "host": os.getenv("MYSQL_HOST"),
-    "port": int(os.getenv("MYSQL_PORT")),
+    "host": "211.253.31.134",
+    "port": "30529",
     "user": "root",
-    "password": os.getenv("MYSQL_PASSWORD"),
+    "password": "12341234",
     "database": "carbonetes"
 }
 
 
 # 함수 도입 부
-def learning_loop(task_name, estimated_time):
+def learning_loop():
     logging.info("[학습기]학습을 시작합니다.")
 
     # [2] 로그 수집
@@ -54,6 +54,7 @@ def learning_loop(task_name, estimated_time):
 
     # [7] 정책 저장
     save_best_weights_to_db(best_result)
+    print(best_result)
     logging.info(f'Learning Loop: Success Weight Save')
 
 
@@ -76,10 +77,10 @@ def save_best_weights_to_db(best_result: dict):
     connection = None
     try:
         db_config = {
-            "host": os.getenv("MYSQL_HOST", "localhost"),
-            "port": int(os.getenv("MYSQL_PORT", 3306)),
+            "host": "211.253.31.134",
+            "port": "30529",
             "user": "root",
-            "password": os.getenv("MYSQL_PASSWORD"),
+            "password": "12341234",
             "database": "carbonetes"
         }
 
@@ -110,3 +111,7 @@ def save_best_weights_to_db(best_result: dict):
             cursor.close()
             connection.close()
             # print("MySQL 연결이 닫혔습니다.")
+
+
+if __name__ == "__main__":
+    learning_loop()
